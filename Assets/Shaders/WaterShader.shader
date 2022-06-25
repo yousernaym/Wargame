@@ -1,4 +1,4 @@
-﻿Shader "Unlit/NewUnlitShader"
+﻿Shader "Unlit/WaterShader"
 {
     Properties
     {
@@ -203,9 +203,9 @@
 
 				//Sample tile texture
 				//fixed4 tileCol = tex2D(_MainTex, input.tileMapUV);
-				if (all(input.color.rgb == float3(0, 1, 0)))
+				if (input.color.g > 0.9f && input.color.b < 0.1f)
 					return sampleTexture(input.groundUV, float2(0, 0), _Ground, _GroundNormalMap, _GroundTint, dirToSun);
-				else if (all(input.color.rgb == float3(1, 1, 1)))
+				else if (dot(input.color.rgb, float3(1, 1, 1)) > 2.9f)
 					return input.color;
 				
 				float4 waves = calcWaves(

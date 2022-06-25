@@ -56,7 +56,7 @@ float gradientDotV(
 	}
 }
 
-float4 perlinNoise3(float3 p, float amp, float freq, int seed)
+float4 perlinNoise3(float3 p, float amp, float freq)
 {
 	p *= freq;
 
@@ -75,7 +75,7 @@ float4 perlinNoise3(float3 p, float amp, float freq, int seed)
 	float ty = p.y - floor(p.y);
 	float tz = p.z - floor(p.z);
 
-	// Do quintic interpolation
+	//Quintic interpolation
 	float u = quintic(tx);
 	float v = quintic(ty);
 	float w = quintic(tz);
