@@ -4,9 +4,9 @@
     {
 		_Offset("Offset", vector) = (0, 0, 0, 0)
 		_WaveAmplitude("Wave amplitude", float) = 0.5
-		_WaveFrequency("Wave frequency", float) = 1
-		_WaveStretch("Wave stretch", float) = 2
-		_WaveFbmGain("Wave fBm gain", float) = 0.3
+		_WaveFrequency("Wave frequency", float) = 3.8
+		_WaveStretch("Wave stretch", float) = 1
+		_WaveFbmGain("Wave fBm gain", float) = 0.32
 		_WaveFbmReso("Wave fBm resolution", range(0, 1)) = 1
 	}
 	SubShader
@@ -66,6 +66,7 @@
 			//Fragment shader
 			fixed4 frag(VertexOutput input) : SV_Target
 			{
+				//return input.worldPos.x / 1.f;
 				//Sample height (w) and normal (xyz)
 				float4 terrain = calcTerrain(
 					float3(input.worldPos + _Offset.xy, _Offset.z),
