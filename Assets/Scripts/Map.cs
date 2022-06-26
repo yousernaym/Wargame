@@ -5,51 +5,54 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+public enum TileType { Land, Water, City }
 public class Map : MonoBehaviour
 {
-    enum TileType { Land, Water, City }
     [SerializeField] Camera rtCamera;
     Material hmapMaterial;
     Tile grassTile;
     Tile waterTile;
     Tile cityTile;
-    public int MapWidth;
-    public int MapHeight;
-    float Aspect => (float)MapHeight / MapWidth;
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public float Aspect => (float)Height / Width;
     float waterLevel;
     public int Seed { get; private set; }
-    public int CityCount { get; private set; }
+    public List<City> Cities { get; private set; } = new List<City>();
 
     [SerializeField] Renderer screenGrabRenderer; //Shows height map for debugging purposes
 
     const int HmapResolutionFactor = 20;
-    int HmapWidth => MapWidth * HmapResolutionFactor;
-    int HmapHeight => MapHeight * HmapResolutionFactor;
+    int HmapWidth => Width * HmapResolutionFactor;
+    int HmapHeight => Height * HmapResolutionFactor;
 
     TileType?[,] tiles;
     TileType? this[int x, int y]
     {
         get
         {
-            if (x < 0 || x >= MapWidth || y < 0 || y >= MapHeight)
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return null;
             return tiles[x, y];
         }
         set
         {
-            if (x < 0 || x >= MapWidth || y < 0 || y >= MapHeight)
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
                 return;
             Tile tile = null;
             if (value == TileType.City)
             {
                 if (tiles[x, y] != TileType.City)
-                    CityCount++;
+                    Cities.Add(new City(null, x, y));
                 tile = cityTile;
             }
             else
             {
                 if (tiles[x, y] == TileType.City)
-                    CityCount--;
+                {
+                    var existingCity = Cities.Find((city) => city.Pos.x == x && city.Pos.y == y);
+                    Cities.Remove(existingCity);
+                }
                 if (value == TileType.Land)
                     tile = grassTile;
                 else
@@ -63,35 +66,29 @@ public class Map : MonoBehaviour
 
     Tilemap tilemap;
     Texture2D hmapTexture;
-    bool isPerformingScreenGrab = false;
     string HmapLayerName = "Hmap";
     System.Random random;
 
     int HmapLayerNumber => LayerMask.NameToLayer(HmapLayerName);
 
-    public void Start()
+    public void Init()
     {
-        MapWidth = NewGameSettings.Instance.NewMapSettings.Width.value;
-        MapHeight = NewGameSettings.Instance.NewMapSettings.Height.value;
-        tiles = new TileType?[MapWidth, MapHeight];
+        Width = NewGameSettings.Instance.NewMapSettings.Width.value;
+        Height = NewGameSettings.Instance.NewMapSettings.Height.value;
+        tiles = new TileType?[Width, Height];
         waterLevel = NewGameSettings.Instance.NewMapSettings.WaterLevel;
         LoadResources();
         hmapTexture = new Texture2D(HmapWidth, HmapHeight, TextureFormat.RFloat, true);
         hmapTexture.name = "HmapTexture";
         CreateQuad();
-        CreateCamera();
-        
-        //var tileMapObject = GameObject.Find("Tilemap");
-        //tilemap = tileMapObject.GetComponent<Tilemap>();
-        tilemap = gameObject.GetComponent<Tilemap>();
-        Camera.onPostRender += OnPostRenderCallback;
-        ViewEntireMap();
+        rtCamera.targetTexture = new RenderTexture(HmapWidth, HmapHeight, 32, RenderTextureFormat.RFloat); ;
+        var tileMapObject = GameObject.Find("Tilemap");
+        tilemap = tileMapObject.GetComponent<Tilemap>();
         GenerateMap();
     }
 
     private void Update()
     {
-        GenerateMap();
     }
 
     private void LoadResources()
@@ -116,41 +113,12 @@ public class Map : MonoBehaviour
         hmapMaterial.SetFloat("_WaveFbmGain", NewGameSettings.Instance.NewMapSettings.FbmGain);
     }
 
-    private void CreateCamera()
+    void GenerateCities()
     {
-        //var rtCameraObject = new GameObject();
-        //rtCamera = rtCameraObject.AddComponent<Camera>();
-        //rtCamera.depth = -1;
-        
-        rtCamera.targetTexture = new RenderTexture(HmapWidth, HmapHeight, 32, RenderTextureFormat.RFloat); ;
-        
-        //rtCamera.cullingMask = 1 << HmapLayerNumber;
-        //rtCamera.orthographic = true;
-        //rtCamera.orthographicSize = Aspect;
-        //rtCameraObject.SetActive(true);
-    }
-
-    private void OnPostRenderCallback(Camera cam)
-    {
-        if (isPerformingScreenGrab)
+        while (Cities.Count < NewGameSettings.Instance.NewMapSettings.CityCount.value)
         {
-            if (cam == rtCamera)
-            {
-                hmapTexture.ReadPixels(new Rect(0, 0, HmapWidth, HmapHeight), 0, 0);
-                hmapTexture.Apply();
-                UpdateTilesFromHmap();
-                GenerateCities();
-                isPerformingScreenGrab = false;
-            }
-        }
-    }
-
-    private void GenerateCities()
-    {
-        while (CityCount < NewGameSettings.Instance.NewMapSettings.CityCount.value)
-        {
-            int x = random.Next(MapWidth);
-            int y = random.Next(MapHeight);
+            int x = random.Next(Width);
+            int y = random.Next(Height);
             float randomValue = (float)random.NextDouble();
             
             if (HasAdjacentTileTypes(x, y, TileType.Water, TileType.Land)           //If tile is on coast, place city
@@ -187,15 +155,22 @@ public class Map : MonoBehaviour
     {
         CenterMap();
         random = new System.Random(Seed);
-        isPerformingScreenGrab = true;
+        rtCamera.Render();
+        RenderTexture.active = rtCamera.targetTexture;
+        hmapTexture.ReadPixels(new Rect(0, 0, HmapWidth, HmapHeight), 0, 0);
+        RenderTexture.active = null;
+        hmapTexture.Apply();
+        UpdateTilesFromHmap();
+        GenerateCities();
     }
 
     public void UpdateTilesFromHmap()
     {
         tilemap.ClearAllTiles();
-        for (int y = 0; y < MapHeight; y++)
+        tiles.Initialize();
+        for (int y = 0; y < Height; y++)
         {
-            for (int x = 0; x < MapWidth; x++)
+            for (int x = 0; x < Width; x++)
             {
                 TileType tileType;
                 float pixel = hmapTexture.GetPixel(x * HmapResolutionFactor, y * HmapResolutionFactor).r;
@@ -211,9 +186,9 @@ public class Map : MonoBehaviour
 
     public void ViewEntireMap()
     {
-        float zh = (float)((MapHeight + 2) / 2.0f / Math.Tan(Camera.main.fieldOfView / 2 * Math.PI / 180));
+        float zh = (float)((Height + 2) / 2.0f / Math.Tan(Camera.main.fieldOfView / 2 * Math.PI / 180));
         float horizontalFov = Camera.VerticalToHorizontalFieldOfView(Camera.main.fieldOfView, Camera.main.aspect);
-        float zw = (float)((MapWidth + 2) / 2.0f / Math.Tan(horizontalFov / 2 * Math.PI / 180));
+        float zw = (float)((Width + 2) / 2.0f / Math.Tan(horizontalFov / 2 * Math.PI / 180));
         float z = -Math.Max(zh, zw);
 
         Camera.main.transform.SetPositionAndRotation(new Vector3(0, 0, z), Quaternion.identity);
@@ -221,7 +196,7 @@ public class Map : MonoBehaviour
 
     private void CenterMap()
     {
-        tilemap.transform.position = new Vector3(-MapWidth / 2.0f, -MapHeight / 2.0f, 0);
+        tilemap.transform.position = new Vector3(-Width / 2.0f, -Height / 2.0f, 0);
     }
 
     private void CreateQuad()

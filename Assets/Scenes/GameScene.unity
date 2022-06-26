@@ -337,6 +337,54 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &927987575
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 927987577}
+  - component: {fileID: 927987576}
+  m_Layer: 0
+  m_Name: Game
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &927987576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927987575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 153a05cc3ea9766459066411a0409c68, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rtCamera: {fileID: 479220210}
+  MapWidth: 0
+  MapHeight: 0
+  screenGrabRenderer: {fileID: 1109048964}
+--- !u!4 &927987577
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927987575}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 43.399788, y: 48.923645, z: -11.3768}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -608,7 +656,6 @@ GameObject:
   - component: {fileID: 1726255326}
   - component: {fileID: 1726255329}
   - component: {fileID: 1726255328}
-  - component: {fileID: 1726255330}
   m_Layer: 0
   m_Name: Tilemap
   m_TagString: Untagged
@@ -15660,18 +15707,3 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
---- !u!114 &1726255330
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1726255325}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 153a05cc3ea9766459066411a0409c68, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rtCamera: {fileID: 479220210}
-  screenGrabRenderer: {fileID: 1109048964}
-  CityCount: 0

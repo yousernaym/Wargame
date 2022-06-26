@@ -6,16 +6,16 @@ using UnityEngine;
 public class NewGameSettings
 {
     public NewMapSettings NewMapSettings = new NewMapSettings();
-    public List<Player> Players = new List<Player>();
+    public List<PlayerSettings> Players = new List<PlayerSettings>();
 
     static NewGameSettings instance;
     public static NewGameSettings Instance => instance ?? (instance = new NewGameSettings());
 
     NewGameSettings()
     {
-        Players.Add(new Player());
+        Players.Add(new PlayerSettings());
         for (int i = 0; i < 2; i++)
-            Players.Add(new Player(1));
+            Players.Add(new PlayerSettings(1));
     }
 }
 
@@ -23,17 +23,17 @@ public class NewMapSettings
 {
     public RangeSetting Width = new RangeSetting(80);
     public RangeSetting Height = new RangeSetting(60);
-    public RangeSetting CityCount = new RangeSetting(55, 75);
+    public RangeSetting CityCount = new RangeSetting(50, 80);
     public float NoiseAmplitude => 0.5f;
 
-    public RangeSetting IslandFrequency = new RangeSetting(40, 60);
+    public RangeSetting IslandFrequency = new RangeSetting(45, 55);
     public float NoiseFrequency => InterpolateSetting(0.5f, 3.8f, 9, IslandFrequency.Value);
 
-    public RangeSetting Smoothness = new RangeSetting(40, 60);
+    public RangeSetting Smoothness = new RangeSetting(45, 55);
     public float FbmGain => InterpolateSetting(0.9f, 0.5f, 0f, Smoothness.Value);
 
-    public RangeSetting LandMass = new RangeSetting(40, 60);
-    public float WaterLevel => InterpolateSetting(0.7f, 0.57f, 0.5f, LandMass.Value);
+    public RangeSetting LandMass = new RangeSetting(45, 55);
+    public float WaterLevel => InterpolateSetting(0.65f, 0.57f, 0.5f, LandMass.Value);
 
     public int? Seed = null;
 
