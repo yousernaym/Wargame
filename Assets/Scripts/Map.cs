@@ -59,6 +59,7 @@ public class Map : MonoBehaviour
         waterTile = Resources.Load<Tile>("Tiling/waterTile");
         cityTile = Resources.Load<Tile>("Tiling/cityTile"); 
         hmapMaterial = Resources.Load<Material>("Tiling/HmapMaterial");
+        hmapMaterial.SetFloat("_WaveAmplitude", NewGameSettings.Instance.NewMapSettings.NoiseAmplitude);
         hmapMaterial.SetFloat("_WaveFrequency", NewGameSettings.Instance.NewMapSettings.NoiseFrequency);
         hmapMaterial.SetFloat("_WaveFbmGain", NewGameSettings.Instance.NewMapSettings.FbmGain);
 
