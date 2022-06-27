@@ -395,6 +395,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed3ddaf2591c59044a0208ba60782b2f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rtCamera: {fileID: 479220210}
+  screenGrabRenderer: {fileID: 1109048964}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -786,6 +788,7 @@ GameObject:
   - component: {fileID: 1726255326}
   - component: {fileID: 1726255329}
   - component: {fileID: 1726255328}
+  - component: {fileID: 1726255330}
   m_Layer: 0
   m_Name: Tilemap
   m_TagString: Untagged
@@ -15839,3 +15842,15 @@ Tilemap:
     e31: 0
     e32: 0
     e33: 1
+--- !u!114 &1726255330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726255325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00794959926891c479ff4f5e33701504, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

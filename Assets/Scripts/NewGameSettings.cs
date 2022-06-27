@@ -6,16 +6,14 @@ using UnityEngine;
 public class NewGameSettings
 {
     public NewMapSettings NewMapSettings = new NewMapSettings();
-    public List<PlayerSettings> Players = new List<PlayerSettings>();
+    public List<PlayerSettings> PlayerSettings = new List<PlayerSettings>();
 
     static NewGameSettings instance;
     public static NewGameSettings Instance => instance ?? (instance = new NewGameSettings());
 
     NewGameSettings()
     {
-        Players.Add(new PlayerSettings(0));
-        for (int i = 0; i < 2; i++)
-            Players.Add(new PlayerSettings(1));
+        PlayerSettings = global::PlayerSettings.CreateDefault();
     }
 }
 

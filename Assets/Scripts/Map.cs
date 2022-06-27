@@ -8,20 +8,16 @@ using UnityEngine.Tilemaps;
 public enum TileType { Land, Water, City }
 public class Map
 {
-   Tile grassTile;
-    Tile waterTile;
-    Tile cityTile;
     public int Width { get; set; }
     public int Height { get; set; }
     public float Aspect => (float)Height / Width;
-    float waterLevel;
     public int Seed { get; private set; }
     public List<City> Cities { get; private set; } = new List<City>();
-
-   
+    MapRenderer mapRenderer;
+    System.Random random;
 
     MapTile[,] tiles;
-    MapTile this[int x, int y]
+    public MapTile this[int x, int y]
     {
         get
         {
@@ -30,57 +26,36 @@ public class Map
             return tiles[x, y];
         }
     }
-    void SetTile(int x, int y, TileType tileType)
-    {
-        var oldTile = tiles[x, y];
-        if (x < 0 || x >= Width || y < 0 || y >= Height || oldTile != null && oldTile.TileType == tileType)
-            return;
-        MapTile newTile = new MapTile();
-        newTile.TileType = tileType;
-        Tile tile = null;
-        if (tileType == TileType.City)
-        {
-            newTile.City = new City(null, x, y);
-            Cities.Add(newTile.City);
-            tile = cityTile;
-        }
-        else
-        {
-            if (oldTile != null && oldTile.TileType == TileType.City)
-                Cities.Remove(tiles[x, y].City);
-            if (tileType == TileType.Land)
-                tile = grassTile;
-            else
-                tile = waterTile;
-        }
-         
-        tilemap.SetTile(new Vector3Int(x, y, 0), tile);
-        tiles[x, y] = newTile;
-    }
-
-    Tilemap tilemap;
-  
-    System.Random random;
-
-   
 
     public Map()
     {
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];
-        waterLevel = NewGameSettings.Instance.NewMapSettings.WaterLevel;
-        LoadResources();
+        Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
         var tileMapObject = GameObject.Find("Tilemap");
-        tilemap = tileMapObject.GetComponent<Tilemap>();
+        mapRenderer = tileMapObject.GetComponent<MapRenderer>();
     }
 
-    void LoadResources()
+    void SetTileType(int x, int y, TileType tileType)
     {
-        grassTile = Resources.Load<Tile>("Tiling/grassTile");
-        waterTile = Resources.Load<Tile>("Tiling/waterTile");
-        cityTile = Resources.Load<Tile>("Tiling/cityTile"); 
-        Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
+        var oldTile = tiles[x, y];
+        if (x < 0 || x >= Width || y < 0 || y >= Height || oldTile != null && oldTile.TileType == tileType)
+            return;
+        MapTile newTile = new MapTile();
+        newTile.TileType = tileType;
+        if (tileType == TileType.City)
+        {
+            newTile.City = new City(null, x, y);
+            Cities.Add(newTile.City);
+        }
+        else
+        {
+            if (oldTile != null && oldTile.TileType == TileType.City)
+                Cities.Remove(tiles[x, y].City);
+        }
+
+        tiles[x, y] = newTile;
     }
 
     void GenerateCities()
@@ -94,7 +69,7 @@ public class Map
             if (HasAdjacentTileTypes(x, y, TileType.Water, TileType.Land)           //If tile is on coast, place city
                 || HasAdjacentTileTypes(x, y, TileType.Land) && randomValue > 0.75   //If tile has no adjacent water, place city some of the time
                 || randomValue > 0.9f)                                             //If tile has no adjacent land, place city even more rarely
-                SetTile(x, y, TileType.City);
+                SetTileType(x, y, TileType.City);
         }
     }
 
@@ -124,34 +99,24 @@ public class Map
         return false;
     }
 
-    public void GenerateMap()
+    public void Generate(Hmap hmap)
     {
-        CenterMap();
+        mapRenderer.CenterMap(Width, Height);
         random = new System.Random(Seed);
-        rtCamera.Render();
-        RenderTexture.active = rtCamera.targetTexture;
-        hmapTexture.ReadPixels(new Rect(0, 0, HmapWidth, HmapHeight), 0, 0);
-        RenderTexture.active = null;
-        hmapTexture.Apply();
-        UpdateTilesFromHmap();
+        hmap.Generate();
+        UpdateTilesFromHmap(hmap);
         GenerateCities();
     }
 
-    public void UpdateTilesFromHmap()
+    public void UpdateTilesFromHmap(Hmap hmap)
     {
-        tilemap.ClearAllTiles();
         tiles.Initialize();
         for (int y = 0; y < Height; y++)
         {
             for (int x = 0; x < Width; x++)
             {
-                TileType tileType;
-                float pixel = hmapTexture.GetPixel(x * HmapResolutionFactor, y * HmapResolutionFactor).r;
-                if (pixel > waterLevel)
-                    tileType = TileType.Land;
-                else
-                    tileType = TileType.Water;
-                SetTile(x, y, tileType);
+                TileType tileType = hmap.GetTileType(x, y);
+                SetTileType(x, y, tileType);
             }
         }
     }
@@ -166,22 +131,21 @@ public class Map
         Camera.main.transform.SetPositionAndRotation(new Vector3(0, 0, z), Quaternion.identity);
     }
 
-    private void CenterMap()
-    {
-        tilemap.transform.position = new Vector3(-Width / 2.0f, -Height / 2.0f, 0);
-    }
-
     public void SetCity(City city)
     {
         var mapTile = this[city.Pos.x, city.Pos.y];
         if (mapTile.TileType != TileType.City)
             throw new ArgumentException("Can't set city on non-city tile");
         mapTile.City = city;
-        tilemap.SetTile(new Vector3Int(city.Pos.x, city.Pos.y, 0), city.Owner.CityTile);
+    }
+
+    public void Show()
+    {
+        mapRenderer.UpdateTilemap(this);
     }
 }
 
-class MapTile
+public class MapTile
 {
     public TileType TileType;
     public Unit Unit;

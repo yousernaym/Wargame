@@ -6,7 +6,6 @@ using UnityEngine.Tilemaps;
 
 public class Player : PlayerSettings
 {
-    public Color Color { get; private set; }
     public Tile CityTile { get; private set; }
 
     List<City> cities = new List<City>();
@@ -16,6 +15,8 @@ public class Player : PlayerSettings
     public Player(PlayerSettings settings, Map globalMap) : base(settings)
     {
         this.globalMap = globalMap;
+        CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
+        CityTile.color = Color;
     }
 
     public static void AssignStartingCities(List<Player> players, Map map)
