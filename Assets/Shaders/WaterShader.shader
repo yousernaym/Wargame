@@ -205,8 +205,9 @@
 				//fixed4 tileCol = tex2D(_MainTex, input.tileMapUV);
 				if (input.color.g > 0.9f && input.color.b < 0.1f)
 					return sampleTexture(input.groundUV, float2(0, 0), _Ground, _GroundNormalMap, _GroundTint, dirToSun);
-				else if (dot(input.color.rgb, float3(1, 1, 1)) > 2.9f)
+				else if (input.color.b < 0.9f || dot(input.color.rgb, float3(1, 1, 1)) > 2.9f)
 					return input.color;
+
 				
 				float4 waves = calcWaves(
 					input.worldPos,

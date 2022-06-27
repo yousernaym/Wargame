@@ -13,7 +13,7 @@ public class NewGameSettings
 
     NewGameSettings()
     {
-        Players.Add(new PlayerSettings());
+        Players.Add(new PlayerSettings(0));
         for (int i = 0; i < 2; i++)
             Players.Add(new PlayerSettings(1));
     }
@@ -33,9 +33,16 @@ public class NewMapSettings
     public float FbmGain => InterpolateSetting(0.9f, 0.5f, 0f, Smoothness.Value);
 
     public RangeSetting LandMass = new RangeSetting(45, 55);
-    public float WaterLevel => InterpolateSetting(0.65f, 0.57f, 0.5f, LandMass.Value);
+    public float WaterLevel => InterpolateSetting(0.64f, 0.57f, 0.5f, LandMass.Value);
 
     public int? Seed = null;
+
+    public int GetSeed()
+    {
+        if (!Seed.HasValue)
+            Seed = new System.Random().Next(0, 1024 * 1024 * 1024);
+        return Seed.Value;
+    }
 
     //Interpolate so that 0% = zero, 50% = fifty, 100% = hundred
     float InterpolateSetting(float zero, float fifty, float hundred, int percent)

@@ -6,11 +6,9 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public enum TileType { Land, Water, City }
-public class Map : MonoBehaviour
+public class Map
 {
-    [SerializeField] Camera rtCamera;
-    Material hmapMaterial;
-    Tile grassTile;
+   Tile grassTile;
     Tile waterTile;
     Tile cityTile;
     public int Width { get; set; }
@@ -20,14 +18,10 @@ public class Map : MonoBehaviour
     public int Seed { get; private set; }
     public List<City> Cities { get; private set; } = new List<City>();
 
-    [SerializeField] Renderer screenGrabRenderer; //Shows height map for debugging purposes
+   
 
-    const int HmapResolutionFactor = 20;
-    int HmapWidth => Width * HmapResolutionFactor;
-    int HmapHeight => Height * HmapResolutionFactor;
-
-    TileType?[,] tiles;
-    TileType? this[int x, int y]
+    MapTile[,] tiles;
+    MapTile this[int x, int y]
     {
         get
         {
@@ -35,82 +29,58 @@ public class Map : MonoBehaviour
                 return null;
             return tiles[x, y];
         }
-        set
+    }
+    void SetTile(int x, int y, TileType tileType)
+    {
+        var oldTile = tiles[x, y];
+        if (x < 0 || x >= Width || y < 0 || y >= Height || oldTile != null && oldTile.TileType == tileType)
+            return;
+        MapTile newTile = new MapTile();
+        newTile.TileType = tileType;
+        Tile tile = null;
+        if (tileType == TileType.City)
         {
-            if (x < 0 || x >= Width || y < 0 || y >= Height)
-                return;
-            Tile tile = null;
-            if (value == TileType.City)
-            {
-                if (tiles[x, y] != TileType.City)
-                    Cities.Add(new City(null, x, y));
-                tile = cityTile;
-            }
-            else
-            {
-                if (tiles[x, y] == TileType.City)
-                {
-                    var existingCity = Cities.Find((city) => city.Pos.x == x && city.Pos.y == y);
-                    Cities.Remove(existingCity);
-                }
-                if (value == TileType.Land)
-                    tile = grassTile;
-                else
-                    tile = waterTile;
-            }
-         
-            tilemap.SetTile(new Vector3Int(x, y, 0), tile);
-            tiles[x, y] = value;
+            newTile.City = new City(null, x, y);
+            Cities.Add(newTile.City);
+            tile = cityTile;
         }
+        else
+        {
+            if (oldTile != null && oldTile.TileType == TileType.City)
+                Cities.Remove(tiles[x, y].City);
+            if (tileType == TileType.Land)
+                tile = grassTile;
+            else
+                tile = waterTile;
+        }
+         
+        tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+        tiles[x, y] = newTile;
     }
 
     Tilemap tilemap;
-    Texture2D hmapTexture;
-    string HmapLayerName = "Hmap";
+  
     System.Random random;
 
-    int HmapLayerNumber => LayerMask.NameToLayer(HmapLayerName);
+   
 
-    public void Init()
+    public Map()
     {
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
-        tiles = new TileType?[Width, Height];
+        tiles = new MapTile[Width, Height];
         waterLevel = NewGameSettings.Instance.NewMapSettings.WaterLevel;
         LoadResources();
-        hmapTexture = new Texture2D(HmapWidth, HmapHeight, TextureFormat.RFloat, true);
-        hmapTexture.name = "HmapTexture";
-        CreateQuad();
-        rtCamera.targetTexture = new RenderTexture(HmapWidth, HmapHeight, 32, RenderTextureFormat.RFloat); ;
         var tileMapObject = GameObject.Find("Tilemap");
         tilemap = tileMapObject.GetComponent<Tilemap>();
-        GenerateMap();
     }
 
-    private void Update()
-    {
-    }
-
-    private void LoadResources()
+    void LoadResources()
     {
         grassTile = Resources.Load<Tile>("Tiling/grassTile");
         waterTile = Resources.Load<Tile>("Tiling/waterTile");
         cityTile = Resources.Load<Tile>("Tiling/cityTile"); 
-        hmapMaterial = Resources.Load<Material>("Tiling/HmapMaterial");
-        hmapMaterial.SetFloat("_WaveAmplitude", NewGameSettings.Instance.NewMapSettings.NoiseAmplitude);
-        hmapMaterial.SetFloat("_WaveFrequency", NewGameSettings.Instance.NewMapSettings.NoiseFrequency);
-        hmapMaterial.SetFloat("_WaveFbmGain", NewGameSettings.Instance.NewMapSettings.FbmGain);
-
-        // <Seed> is a value between 0 and 1024^3.
-        // It is used to create a 3d vector with random values between 0 and 1023 which is used to offset the procedural noise texture
-        // The map has a size of 1, so offsetting by 1 gives a completely new map, meaning we get 1024^3 unique maps
-        int? seed = NewGameSettings.Instance.NewMapSettings.Seed;
-        if (seed == null)
-            seed = (int)new System.Random().Next(0, 1024*1024*1024);
-        Seed = (int)seed;
-        var seedVector = new Vector4((float)(seed & 1023), (float)((seed << 10) & 1023), (float)((seed << 20) & 1023));
-        hmapMaterial.SetVector("_Offset", seedVector);
-        hmapMaterial.SetFloat("_WaveFbmGain", NewGameSettings.Instance.NewMapSettings.FbmGain);
+        Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
     }
 
     void GenerateCities()
@@ -124,7 +94,7 @@ public class Map : MonoBehaviour
             if (HasAdjacentTileTypes(x, y, TileType.Water, TileType.Land)           //If tile is on coast, place city
                 || HasAdjacentTileTypes(x, y, TileType.Land) && randomValue > 0.75   //If tile has no adjacent water, place city some of the time
                 || randomValue > 0.9f)                                             //If tile has no adjacent land, place city even more rarely
-                this[x, y] = TileType.City;
+                SetTile(x, y, TileType.City);
         }
     }
 
@@ -144,7 +114,10 @@ public class Map : MonoBehaviour
         {
             for (int i = x - 1; i < x + 1; i++)
             {
-                if (this[i, j] == tileTypeToLookFor)
+                if (i == x && j == y)
+                    continue;
+                var mapTile = this[i, j];
+                if (mapTile != null && mapTile.TileType == tileTypeToLookFor)
                     return true;
             }
         }
@@ -174,12 +147,11 @@ public class Map : MonoBehaviour
             {
                 TileType tileType;
                 float pixel = hmapTexture.GetPixel(x * HmapResolutionFactor, y * HmapResolutionFactor).r;
-                //Debug.Log(pixel);
                 if (pixel > waterLevel)
                     tileType = TileType.Land;
                 else
                     tileType = TileType.Water;
-                this[x, y] = tileType;
+                SetTile(x, y, tileType);
             }
         }
     }
@@ -199,34 +171,19 @@ public class Map : MonoBehaviour
         tilemap.transform.position = new Vector3(-Width / 2.0f, -Height / 2.0f, 0);
     }
 
-    private void CreateQuad()
+    public void SetCity(City city)
     {
-        GameObject quad = new GameObject("HmapQuad");
-        quad.layer = HmapLayerNumber;
-        MeshFilter filter = quad.AddComponent<MeshFilter>();
-        MeshRenderer renderer = quad.AddComponent<MeshRenderer>();
-        Mesh mesh = new Mesh();
-        mesh.vertices = new Vector3[] {
-            new Vector3 (-1, -1, 1),
-            new Vector3 (1, -1, 1),
-            new Vector3 (1, 1, 1),
-            new Vector3 (-1, 1, 1)
-         };
-
-        mesh.triangles = new int[] {
-            0, 3, 2,
-            0, 2, 1
-        };
-        filter.mesh = mesh;
-        renderer.material = hmapMaterial;
-
-        //var go = new GameObject();
-        //var screenGrabRenderer = go.AddComponent<MeshRenderer>();
-        screenGrabRenderer.material.mainTexture = hmapTexture;
-        //filter = go.AddComponent<MeshFilter>();
-        //filter.mesh = mesh;
-        //go.transform.SetPositionAndRotation(new Vector3(-30, 10, -20), Quaternion.identity);
-        //go.transform.localScale = new Vector3(10, 10, 1);
-        //screenGrabRenderer.enabled = false;
+        var mapTile = this[city.Pos.x, city.Pos.y];
+        if (mapTile.TileType != TileType.City)
+            throw new ArgumentException("Can't set city on non-city tile");
+        mapTile.City = city;
+        tilemap.SetTile(new Vector3Int(city.Pos.x, city.Pos.y, 0), city.Owner.CityTile);
     }
+}
+
+class MapTile
+{
+    public TileType TileType;
+    public Unit Unit;
+    public City City;
 }

@@ -10,11 +10,10 @@ public class Gameplay : MonoBehaviour
 
     void Start()
     {
-        map = GetComponent<Map>();
-        map.Init();
+        map = new Map();
 
         foreach (var playerSetting in NewGameSettings.Instance.Players)
-            players.Add(new Player(playerSetting));
+            players.Add(new Player(playerSetting, map));
         Player.AssignStartingCities(players, map);
 
         map.ViewEntireMap();
