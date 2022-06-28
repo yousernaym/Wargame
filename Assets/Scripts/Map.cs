@@ -13,7 +13,6 @@ public class Map
     public float Aspect => (float)Height / Width;
     public int Seed { get; private set; }
     public List<City> Cities { get; private set; } = new List<City>();
-    MapRenderer mapRenderer;
     System.Random random;
 
     MapTile[,] tiles;
@@ -34,7 +33,6 @@ public class Map
         tiles = new MapTile[Width, Height];
         Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
         var tileMapObject = GameObject.Find("Tilemap");
-        mapRenderer = tileMapObject.GetComponent<MapRenderer>();
     }
 
     void SetTileType(int x, int y, TileType tileType)
@@ -101,7 +99,6 @@ public class Map
 
     public void Generate(Hmap hmap)
     {
-        mapRenderer.CenterMap(Width, Height);
         random = new System.Random(Seed);
         hmap.Generate();
         UpdateTilesFromHmap(hmap);
@@ -121,16 +118,6 @@ public class Map
         }
     }
 
-    public void ViewEntireMap()
-    {
-        float zh = (float)((Height + 2) / 2.0f / Math.Tan(Camera.main.fieldOfView / 2 * Math.PI / 180));
-        float horizontalFov = Camera.VerticalToHorizontalFieldOfView(Camera.main.fieldOfView, Camera.main.aspect);
-        float zw = (float)((Width + 2) / 2.0f / Math.Tan(horizontalFov / 2 * Math.PI / 180));
-        float z = -Math.Max(zh, zw);
-
-        Camera.main.transform.SetPositionAndRotation(new Vector3(0, 0, z), Quaternion.identity);
-    }
-
     public void SetCity(City city)
     {
         var mapTile = this[city.Pos.x, city.Pos.y];
@@ -141,7 +128,7 @@ public class Map
 
     public void Show()
     {
-        mapRenderer.UpdateTilemap(this);
+        MapRenderer.Instance.UpdateTilemap(this);
     }
 }
 

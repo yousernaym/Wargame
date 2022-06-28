@@ -154,12 +154,7 @@ public class Player : PlayerSettings
     void SelectProd(City city)
     {
         selectingProd = true;
-        MoveCameraTo(city.Pos);
+        MapRenderer.Instance.MoveCameraToTile(city.Pos);
         CurrentCity.ShowProdDialog();
-    }
-
-    private void MoveCameraTo(Vector2Int pos)
-    {
-        
     }
 }

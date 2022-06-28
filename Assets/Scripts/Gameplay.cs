@@ -21,7 +21,7 @@ public class Gameplay : MonoBehaviour
         map.Generate(hmap);
         Player.AssignStartingCities(players, map);
         map.Show();
-        map.ViewEntireMap();
+        MapRenderer.Instance.ViewEntireMap();
     }
 
 
