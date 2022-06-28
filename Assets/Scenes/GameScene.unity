@@ -578,7 +578,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1109048963
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -15815,7 +15815,7 @@ Tilemap:
   - m_RefCount: 49
     m_Data: {r: 0, g: 1, b: 0, a: 1}
   - m_RefCount: 0
-    m_Data: {r: 3.3208e-41, g: 3.3208e-41, b: 3.3208e-41, a: 3.3208e-41}
+    m_Data: {r: 3.3242e-41, g: 3.3242e-41, b: 3.3242e-41, a: 3.3242e-41}
   - m_RefCount: 272
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []

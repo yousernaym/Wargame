@@ -8,6 +8,8 @@ public class Gameplay : MonoBehaviour
     Hmap hmap;
     List<Player> players = new List<Player>();
     int currentTurn;
+    Player currentPlayer => players[currentPlayerIndex];
+    int currentPlayerIndex;
 
     void Start()
     {
@@ -25,6 +27,13 @@ public class Gameplay : MonoBehaviour
 
     void Update()
     {
-
+        if (currentPlayer.ProcessCurrentState() == PlayerState.EndTurn)
+        {
+            if (++currentPlayerIndex >= players.Count)
+            {
+                currentPlayerIndex = 0;
+                currentTurn++;
+            }
+        }
     }
 }

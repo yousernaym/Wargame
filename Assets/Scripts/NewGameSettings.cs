@@ -30,7 +30,7 @@ public class NewMapSettings
     public RangeSetting Smoothness = new RangeSetting(45, 55);
     public float FbmGain => InterpolateSetting(0.9f, 0.5f, 0f, Smoothness.Value);
 
-    public RangeSetting LandMass = new RangeSetting(45, 55);
+    public RangeSetting LandMass = new RangeSetting(50, 50);
     public float WaterLevel => InterpolateSetting(0.64f, 0.57f, 0.5f, LandMass.Value);
 
     public int? Seed = null;

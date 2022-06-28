@@ -4,13 +4,63 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
+public enum PlayerState { StartGame, StartTurn, Move, EndTurn }
+
 public class Player : PlayerSettings
 {
+    bool selectingProd;
+    //bool SelectingProd
+    //{
+    //    get => selectingProd;
+    //    set
+    //    {
+    //        if (value == selectingProd)
+    //            throw new ArgumentException();
+    //        selectingProd = value;
+    //        if (value)
+    //            return;
+    //        if (state == PlayerState.StartTurn)
+    //            currentCityIndex++;
+    //        else if (state == PlayerState.StartGame)
+    //            state = PlayerState.EndTurn;
+    //    }
+    //}
+
     public Tile CityTile { get; private set; }
 
     List<City> cities = new List<City>();
+    List<Unit> units = new List<Unit>();
+    Unit currentUnit;
     Map globalMap;
     Map playerMap = new Map();
+    int currentTurn;
+    int currentCityIndex;
+    City CurrentCity => cities[currentCityIndex];
+
+    PlayerState state = PlayerState.StartTurn;
+    PlayerState State
+    {
+        get => state;
+        set
+        {
+            if (value == state)
+                throw new ArgumentException("Setting player state to same value.");
+            state = value;
+            switch (value)
+            {
+                case PlayerState.StartTurn:
+                    break;
+                case PlayerState.Move:
+                    break;
+                case PlayerState.EndTurn:
+                    currentCityIndex = 0;
+                    foreach (var city in cities)
+                        city.ProdTime--;
+                    currentTurn++;
+                    break;
+            }
+        }
+    }
 
     public Player(PlayerSettings settings, Map globalMap) : base(settings)
     {
@@ -76,5 +126,40 @@ public class Player : PlayerSettings
     {
         city.Owner = null;
         cities.Remove(city);
+    }
+
+    public PlayerState ProcessCurrentState()
+    {
+        if (selectingProd)
+            return state;
+        if (currentCityIndex >= cities.Count)
+            return state = PlayerState.EndTurn;
+        switch (state)
+        {
+            case PlayerState.StartGame:
+                SelectProd(CurrentCity);
+                break;
+            case PlayerState.StartTurn:
+                if (CurrentCity.IsProdDone())
+                    SelectProd(CurrentCity);
+                break;
+            case PlayerState.Move:
+                break;
+            case PlayerState.EndTurn:
+                break;
+        }
+        return state;
+    }
+
+    void SelectProd(City city)
+    {
+        selectingProd = true;
+        MoveCameraTo(city.Pos);
+        CurrentCity.ShowProdDialog();
+    }
+
+    private void MoveCameraTo(Vector2Int pos)
+    {
+        
     }
 }
