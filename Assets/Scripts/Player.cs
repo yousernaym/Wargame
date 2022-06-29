@@ -8,6 +8,7 @@ public enum PlayerState { StartGame, StartTurn, Move, EndTurn }
 
 public class Player : PlayerSettings
 {
+    ProdDialog prodDialog;
     bool selectingProd;
     //bool SelectingProd
     //{
@@ -37,7 +38,7 @@ public class Player : PlayerSettings
     int currentCityIndex;
     City CurrentCity => cities[currentCityIndex];
 
-    PlayerState state = PlayerState.StartTurn;
+    PlayerState state = PlayerState.StartGame;
     PlayerState State
     {
         get => state;
@@ -62,9 +63,10 @@ public class Player : PlayerSettings
         }
     }
 
-    public Player(PlayerSettings settings, Map globalMap) : base(settings)
+    public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
     {
         this.globalMap = globalMap;
+        this.prodDialog = prodDialog;
         CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
         CityTile.color = Color;
     }
@@ -155,6 +157,22 @@ public class Player : PlayerSettings
     {
         selectingProd = true;
         MapRenderer.Instance.MoveCameraToTile(city.Pos);
-        CurrentCity.ShowProdDialog();
+        ShowProdDialog(city);
+    }
+
+    public void ShowProdDialog(City city)
+    {
+        prodDialog.SetPos(new Vector2(1600, -700));
+        prodDialog.OnHide = OnProdDialogClose;
+        prodDialog.Show();
+    }
+
+    void OnProdDialogClose()
+    {
+        if (state == PlayerState.StartGame || state == PlayerState.StartTurn)
+        {
+            if (++currentCityIndex >= cities.Count)
+                state = PlayerState.EndTurn;
+        }
     }
 }

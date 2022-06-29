@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CreateUnitRows : MonoBehaviour
+public class ProdDialog : Window
 {
     [SerializeField] GameObject unitRowTemplate;
     [SerializeField] ListBox listBox;
@@ -24,13 +24,7 @@ public class CreateUnitRows : MonoBehaviour
 
         var listBoxRt = listBox.GetComponent<RectTransform>();
         var listBoxPosY = listBoxRt.anchoredPosition.y;
-        Debug.Log(listBox.Height);
         var windowRt = transform.GetComponent<RectTransform>();
         windowRt.sizeDelta = new Vector2(windowRt.sizeDelta.x, -listBoxPosY * 2 + listBox.Height);
-    }
-
-    void Update()
-    {
-        
     }
 }

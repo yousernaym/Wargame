@@ -10,6 +10,7 @@ public class Gameplay : MonoBehaviour
     int currentTurn;
     Player currentPlayer => players[currentPlayerIndex];
     int currentPlayerIndex;
+    [SerializeField] ProdDialog prodDialog;
 
     void Start()
     {
@@ -17,7 +18,7 @@ public class Gameplay : MonoBehaviour
         hmap = gameObject.GetComponent<Hmap>();
         hmap.Init(map);
         foreach (var playerSetting in NewGameSettings.Instance.PlayerSettings)
-            players.Add(new Player(playerSetting, map));
+            players.Add(new Player(playerSetting, map, prodDialog));
         map.Generate(hmap);
         Player.AssignStartingCities(players, map);
         map.Show();
