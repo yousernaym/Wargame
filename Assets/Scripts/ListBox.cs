@@ -12,27 +12,30 @@ public class ListBox : MonoBehaviour
     List<ListBoxItem> items = new List<ListBoxItem>();
     public float Width { get; private set; }
     public float Height { get; private set; }
-    int selectedItem;
-    public int SelectedItem
+    int selectedItemIndex;
+    public int SelectedItemIndex
     {
-        get => selectedItem;
+        get => selectedItemIndex;
         set
         {
-            selectedItem = ClampItemIndex(value);
-            selectedItemHighlight.SetItem(items[selectedItem]);
+            selectedItemIndex = ClampItemIndex(value);
+            selectedItemHighlight.SetItem(items[selectedItemIndex]);
         }
     }
-    int activeItem;
-    public int ActiveItem
+    int activeItemIndex;
+    public int ActiveItemIndex
     {
-        get => activeItem;
+        get => activeItemIndex;
         set
         {
-            activeItem = ClampItemIndex(value);
-            activeItemHighlight.SetItem(items[activeItem]);
+            activeItemIndex = ClampItemIndex(value);
+            activeItemHighlight.SetItem(items[activeItemIndex]);
         }
     }
 
+    public object ActiveItem => items[ActiveItemIndex];
+    public object SelectedItem => items[SelectedItemIndex];
+    
     int ClampItemIndex(int index)
     {
         if (index < 0)
@@ -51,16 +54,16 @@ public class ListBox : MonoBehaviour
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
-            ActiveItem--;
+            ActiveItemIndex--;
         else if (Input.GetKeyDown(KeyCode.DownArrow))
-            ActiveItem++;
+            ActiveItemIndex++;
         else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
-            SelectedItem = ActiveItem;
+            SelectedItemIndex = ActiveItemIndex;
     }
 
-    public void AddItem(GameObject item)
+    public void AddItem(GameObject displayItem, object value)
     {
-        var lbItem = new ListBoxItem(item);
+        var lbItem = new ListBoxItem(displayItem, value);
         lbItem.Pos = new Vector2(0, -Height);
         Height += lbItem.Height;
         if (lbItem.Width > Width)
@@ -71,8 +74,9 @@ public class ListBox : MonoBehaviour
 
 class ListBoxItem
 {
-    GameObject gameObject;
+    GameObject displayItem;
     RectTransform rectTransform;
+    object value;
     public float Width => rectTransform.rect.width;
     public float Height => rectTransform.rect.height;
     public Vector2 Pos
@@ -81,10 +85,11 @@ class ListBoxItem
         set => rectTransform.anchoredPosition = value;
     }
 
-    public ListBoxItem(GameObject gameObject)
+    public ListBoxItem(GameObject displayItem, object value)
     {
-        this.gameObject = gameObject;
-        rectTransform = gameObject.GetComponent<RectTransform>();
+        this.displayItem = displayItem;
+        rectTransform = displayItem.GetComponent<RectTransform>();
+        this.value = value;
     }
 }
 

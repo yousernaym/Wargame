@@ -7,24 +7,39 @@ public class Window : MonoBehaviour
 {
     public Action OnHide { get; set; }
     RectTransform rectTransform;
-    Vector2 pos;
-    static Vector2 staticPos;
-
-    public void Show()
+    RectTransform RectTransform => rectTransform ?? (rectTransform = GetComponent<RectTransform>());
+    public Vector2 Pos
     {
+        get => RectTransform.anchoredPosition;
+        set => RectTransform.anchoredPosition = value;
+    }
+
+    public Vector2 Size
+    {
+        get => RectTransform.sizeDelta;
+        set => RectTransform.sizeDelta = value;
+    }
+
+    public Vector2 ParentSize
+    {
+        get
+        {
+            var parentRt = RectTransform.parent.GetComponent<RectTransform>();
+            return parentRt.rect.size;
+        }
+    }
+ 
+
+    public void Show(Vector2 pos)
+    {
+        Pos = pos;
         gameObject.SetActive(true);
     }
 
     public void Hide()
     {
-        OnHide?.Invoke();
         gameObject.SetActive(false);
     }
 
-    public void SetPos(Vector2 pos)
-    {
-        if (rectTransform == null)
-            rectTransform = GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = pos;
-    }
+
 }

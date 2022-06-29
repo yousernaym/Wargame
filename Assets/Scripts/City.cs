@@ -18,7 +18,7 @@ public class City
     }
 
     UnitType production;
-    UnitType Production
+    public UnitType Production
     {
         get => production;
         set

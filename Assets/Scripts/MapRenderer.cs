@@ -14,6 +14,8 @@ public class MapRenderer : MonoBehaviour
     Tile waterTile;
     Tile neutralCityTile;
     Camera Camera => Camera.main;
+    RectTransform canvasRt;
+
     Vector3 CamPos
     {
         get => Camera.transform.position;
@@ -30,6 +32,7 @@ public class MapRenderer : MonoBehaviour
         tilemap = gameObject.GetComponent<Tilemap>();
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
+        canvasRt = GameObject.Find("Canvas").GetComponent<RectTransform>();
     }
 
     public void CenterCamera()
@@ -45,6 +48,21 @@ public class MapRenderer : MonoBehaviour
         float z = -Math.Max(zh, zw);
 
         Camera.transform.SetPositionAndRotation(new Vector3(width / 2, height / 2, z), Quaternion.identity);
+    }
+
+    public Vector2 TileToCanvasPos(Vector2Int pos)
+    {
+        var worldPos = tilemap.GetCellCenterWorld(new Vector3Int(pos.x ,pos.y, 0));
+        var screenPos = Camera.WorldToScreenPoint(worldPos);
+        var canvasPos = new Vector2(screenPos.x * canvasRt.rect.width / Screen.width, screenPos.y * canvasRt.rect.height / Screen.height);
+        //Debug.Log(pos);
+        //Debug.Log(worldPos);
+        //Debug.Log(screenPos);
+        //Debug.Log(Screen.width);
+        //Debug.Log(Screen.height);
+        //Debug.Log(canvasPos);
+        //Debug.Log(canvasRt.rect);
+        return canvasPos;
     }
 
     public void UpdateTilemap(Map map)

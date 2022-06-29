@@ -134,8 +134,6 @@ public class Player : PlayerSettings
     {
         if (selectingProd)
             return state;
-        if (currentCityIndex >= cities.Count)
-            return state = PlayerState.EndTurn;
         switch (state)
         {
             case PlayerState.StartGame:
@@ -163,14 +161,12 @@ public class Player : PlayerSettings
 
     public void ShowProdDialog(City city)
     {
-        prodDialog.SetPos(new Vector2(1600, -700));
-        prodDialog.OnHide = OnProdDialogClose;
-        prodDialog.Show();
+        prodDialog.Show(city);
     }
 
-    void OnProdDialogClose()
+    public void OnProdDialogClose()
     {
-        if (state == PlayerState.StartGame || state == PlayerState.StartTurn)
+        if (state == PlayerState.StartTurn)
         {
             if (++currentCityIndex >= cities.Count)
                 state = PlayerState.EndTurn;
