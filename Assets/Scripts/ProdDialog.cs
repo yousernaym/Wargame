@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ProdDialog : Window
+public class ProdDialog : Dialog
 {
     [SerializeField] GameObject unitRowTemplate;
     [SerializeField] ListBox listBox;

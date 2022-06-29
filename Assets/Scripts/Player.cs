@@ -139,6 +139,7 @@ public class Player : PlayerSettings
         switch (state)
         {
             case PlayerState.StartGame:
+                state = PlayerState.StartTurn;
                 SelectProd(CurrentCity);
                 break;
             case PlayerState.StartTurn:

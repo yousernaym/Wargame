@@ -25,7 +25,6 @@ public class Gameplay : MonoBehaviour
         MapRenderer.Instance.ViewEntireMap();
     }
 
-
     void Update()
     {
         if (currentPlayer.ProcessCurrentState() == PlayerState.EndTurn)
