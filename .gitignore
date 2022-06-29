@@ -71,4 +71,11 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-/Assets
+/Assets/FighterInterceptor
+/Assets/MS
+/Assets/ProceduralUIImage
+/Assets/Simple Warships
+/Assets/TextMesh Pro
+/Assets/Textures
+/Assets/UIGradient
+/Assets/WW2 Armed Forces Demo
