@@ -70,17 +70,16 @@ public class MapRenderer : MonoBehaviour
 
     public Vector2 TileToCanvasPos(Vector2Int pos)
     {
-        var worldPos = tilemap.GetCellCenterWorld(new Vector3Int(pos.x ,pos.y, 0));
-        var screenPos = Camera.WorldToScreenPoint(worldPos);
+        Vector3 screenPos = TileToScreenPos(pos);
         var canvasPos = new Vector2(screenPos.x * canvasRt.rect.width / Screen.width, screenPos.y * canvasRt.rect.height / Screen.height);
-        //Debug.Log(pos);
-        //Debug.Log(worldPos);
-        //Debug.Log(screenPos);
-        //Debug.Log(Screen.width);
-        //Debug.Log(Screen.height);
-        //Debug.Log(canvasPos);
-        //Debug.Log(canvasRt.rect);
         return canvasPos;
+    }
+
+    private Vector3 TileToScreenPos(Vector2Int pos)
+    {
+        var worldPos = tilemap.GetCellCenterWorld(new Vector3Int(pos.x, pos.y, 0));
+        var screenPos = Camera.WorldToScreenPoint(worldPos);
+        return screenPos;
     }
 
     public void UpdateTilemap(Map map)
@@ -109,5 +108,12 @@ public class MapRenderer : MonoBehaviour
     public void MoveCameraToTile(Vector2Int pos, bool center = false)
     {
         CamPos = new Vector3(pos.x, pos.y, CamPos.z);
+    }
+
+    public bool IsTileInView(Vector2Int pos)
+    {
+        var screenPos = TileToScreenPos(pos);
+        return screenPos.x < Screen.width - 0.5f && screenPos.x > 0.5f
+            && screenPos.y < Screen.height - 0.5f && screenPos.y > 0.5f;
     }
 }

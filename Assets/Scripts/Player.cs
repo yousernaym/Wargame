@@ -155,7 +155,8 @@ public class Player : PlayerSettings
     void SelectProd(City city)
     {
         selectingProd = true;
-        MapRenderer.Instance.MoveCameraToTile(city.Pos);
+        if (!MapRenderer.Instance.IsTileInView(city.Pos))
+            MapRenderer.Instance.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
     }
 
