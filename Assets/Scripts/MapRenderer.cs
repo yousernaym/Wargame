@@ -15,6 +15,7 @@ public class MapRenderer : MonoBehaviour
     Tile neutralCityTile;
     Camera Camera => Camera.main;
     RectTransform canvasRt;
+    float[] zoomLevels = new float[] { 10, 20, 30 };
 
     Vector3 CamPos
     {
@@ -22,7 +23,6 @@ public class MapRenderer : MonoBehaviour
         set => Camera.transform.position = value;
     }
     
-
     void Awake()
     {
         Instance = this;
@@ -33,6 +33,24 @@ public class MapRenderer : MonoBehaviour
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
         canvasRt = GameObject.Find("Canvas").GetComponent<RectTransform>();
+    }
+
+    void Update()
+    {
+        var camPos = Camera.transform.position;
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            camPos.z = -zoomLevels[0];
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            camPos.z = -zoomLevels[1];
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            camPos.z = -zoomLevels[2];
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            ViewEntireMap();
+            return;
+        }
+        
+        Camera.transform.position = camPos;
     }
 
     public void CenterCamera()

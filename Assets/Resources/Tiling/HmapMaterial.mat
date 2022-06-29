@@ -124,9 +124,9 @@ Material:
     - _UseSkyPlane: 1
     - _WaterOpacity: 0.5
     - _WaveAmplitude: 0.5
-    - _WaveFbmGain: 0.58
+    - _WaveFbmGain: 0.588
     - _WaveFbmReso: 1
-    - _WaveFrequency: 3.074
+    - _WaveFrequency: 2.48
     - _WaveStretch: 1
     - _ZWrite: 1
     m_Colors:
@@ -136,7 +136,7 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FogCol: {r: 1, g: 1, b: 1, a: 1}
     - _GroundTint: {r: 1, g: 1, b: 1, a: 1}
-    - _Offset: {r: 207, g: 0, b: 0, a: 0}
+    - _Offset: {r: 59, g: 0, b: 0, a: 0}
     - _ScrollOffset: {r: 1, g: 0.1, b: 0, a: 0}
     - _SeabedTint: {r: 1, g: 1, b: 1, a: 1}
     - _ShallowWaterCol: {r: 0, g: 0.09999997, b: 0.34999996, a: 1}
