@@ -170,7 +170,10 @@ public class Player : PlayerSettings
         if (state == PlayerState.StartTurn)
         {
             if (++currentCityIndex >= cities.Count)
+            {
+                currentCityIndex = 0;
                 state = PlayerState.EndTurn;
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ public class ListBox : MonoBehaviour
     }
 
     public object ActiveItem => items[ActiveItemIndex];
-    public object SelectedItem => items[SelectedItemIndex];
+    public object SelectedItem => items[SelectedItemIndex].Value;
     
     int ClampItemIndex(int index)
     {
@@ -74,9 +74,18 @@ public class ListBox : MonoBehaviour
 
 class ListBoxItem
 {
-    GameObject displayItem;
     RectTransform rectTransform;
-    object value;
+    public GameObject displayItem;
+    public GameObject DisplayItem
+    {
+        get => displayItem;
+        set
+        {
+            displayItem = value;
+            rectTransform = displayItem.GetComponent<RectTransform>();
+        }
+    }
+    public object Value { get; set; }
     public float Width => rectTransform.rect.width;
     public float Height => rectTransform.rect.height;
     public Vector2 Pos
@@ -87,9 +96,8 @@ class ListBoxItem
 
     public ListBoxItem(GameObject displayItem, object value)
     {
-        this.displayItem = displayItem;
-        rectTransform = displayItem.GetComponent<RectTransform>();
-        this.value = value;
+        DisplayItem = displayItem;
+        Value = value;
     }
 }
 

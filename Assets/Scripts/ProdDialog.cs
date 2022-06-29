@@ -41,7 +41,7 @@ public class ProdDialog : Dialog
         base.Show(dialogPos);
     }
 
-    new public void Hide()
+    override public void Hide()
     {
         OnHide?.Invoke();
         city.Production = SelectedUnitType;
