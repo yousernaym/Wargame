@@ -17,7 +17,7 @@ public class MapRenderer : MonoBehaviour
     RectTransform canvasRt;
     float[] zoomLevels = new float[] { 10, 20, 30 };
 
-    Vector3 CamPos
+    public Vector3 CamPos
     {
         get => Camera.transform.position;
         set => Camera.transform.position = value;
@@ -107,8 +107,10 @@ public class MapRenderer : MonoBehaviour
 
     public void MoveCameraToTile(Vector2Int pos, bool center = false)
     {
-        CamPos = new Vector3(pos.x, pos.y, CamPos.z);
+        CamPos = new Vector3(pos.x + 0.5f, pos.y + 0.5f, CamPos.z);
     }
+
+
 
     public bool IsTileInView(Vector2Int pos)
     {

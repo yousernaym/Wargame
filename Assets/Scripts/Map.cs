@@ -130,6 +130,12 @@ public class Map
     {
         MapRenderer.Instance.UpdateTilemap(this);
     }
+
+    public static int Distance(Vector2Int pos1, Vector2Int pos2)
+    {
+        var diff = pos1 - pos2;
+        return Math.Max(diff.x, diff.y);
+    }
 }
 
 public class MapTile

@@ -29,6 +29,7 @@ public class Gameplay : MonoBehaviour
     {
         if (currentPlayer.ProcessCurrentState() == PlayerState.EndTurn)
         {
+            currentPlayer.State = PlayerState.StartTurn;
             if (++currentPlayerIndex >= players.Count)
             {
                 currentPlayerIndex = 0;

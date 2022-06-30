@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -39,7 +40,7 @@ public class Player : PlayerSettings
     City CurrentCity => cities[currentCityIndex];
 
     PlayerState state = PlayerState.StartGame;
-    PlayerState State
+    public PlayerState State
     {
         get => state;
         set
@@ -50,8 +51,10 @@ public class Player : PlayerSettings
             switch (value)
             {
                 case PlayerState.StartTurn:
+                    currentCityIndex = 0;
                     break;
                 case PlayerState.Move:
+                    currentUnit = NextUnit();
                     break;
                 case PlayerState.EndTurn:
                     currentCityIndex = 0;
@@ -137,19 +140,52 @@ public class Player : PlayerSettings
         switch (state)
         {
             case PlayerState.StartGame:
-                state = PlayerState.StartTurn;
+                State = PlayerState.StartTurn;
                 SelectProd(CurrentCity);
                 break;
             case PlayerState.StartTurn:
                 if (CurrentCity.IsProdDone())
+                {
+                    units.Add(CurrentCity.CreateUnit());
                     SelectProd(CurrentCity);
+                }
+                if (++currentCityIndex >= cities.Count)
+                    State = PlayerState.Move;
                 break;
             case PlayerState.Move:
+                if (units.Count == 0 || (currentUnit = NextUnit()) == null)
+                {
+                    State = PlayerState.EndTurn;
+                    break;
+                }
+                if (currentUnit.Move())
+                    currentUnit = NextUnit();
                 break;
             case PlayerState.EndTurn:
                 break;
         }
         return state;
+    }
+
+    //Return unit closest to center of screen to minimize camera movement
+    Unit NextUnit()
+    {
+        float minDistance = float.MaxValue;
+        Unit nextUnit = null;
+        foreach (var unit in units)
+        {
+            if (unit != currentUnit && unit.CurrentTurn < currentTurn)
+            {
+                var camPos = MapRenderer.Instance.CamPos;
+                int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    nextUnit = unit;
+                }
+            }
+        }
+        return nextUnit;
     }
 
     void SelectProd(City city)
@@ -167,13 +203,10 @@ public class Player : PlayerSettings
 
     public void OnProdDialogClose()
     {
-        if (state == PlayerState.StartTurn)
+        selectingProd = false;
+        if (State == PlayerState.StartTurn)
         {
-            if (++currentCityIndex >= cities.Count)
-            {
-                currentCityIndex = 0;
-                state = PlayerState.EndTurn;
-            }
+            
         }
     }
 }

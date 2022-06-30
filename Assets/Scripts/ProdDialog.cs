@@ -6,8 +6,18 @@ using UnityEngine;
 public class ProdDialog : Dialog
 {
     [SerializeField] GameObject unitRowTemplate;
-    [SerializeField] ListBox listBox;
-    public UnitType SelectedUnitType => (UnitType)listBox.SelectedItem;
+    [SerializeField] ListBox_UnitType listBox;
+    public UnitType SelectedUnitType
+    {
+        get => (UnitType)listBox.SelectedItem;
+        set => listBox.SelectedItem = value;
+    }
+    public UnitType ActiveUnitType
+    {
+        get => (UnitType)listBox.ActiveItem;
+        set => listBox.ActiveItem = value;
+    }
+
     City city;
 
     void Start()
@@ -38,12 +48,15 @@ public class ProdDialog : Dialog
         Vector2 dialogPos = new Vector2(ParentSize.x * 3 / 4 - Size.x / 2, ParentSize.y / 2 + Size.y / 2);
         if (cityCanvasPos.x > ParentSize.x / 2)
             dialogPos.x -= ParentSize.x / 2;
+        SelectedUnitType = ActiveUnitType = city.Production;
         base.Show(dialogPos);
     }
 
     override public void Hide()
     {
         OnHide?.Invoke();
+        if (ResultOk)
+            SelectedUnitType = ActiveUnitType;
         city.Production = SelectedUnitType;
         city.Owner.OnProdDialogClose();
         base.Hide();

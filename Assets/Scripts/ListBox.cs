@@ -2,14 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ListBox : MonoBehaviour
+public class ListBox<T> : MonoBehaviour
 {
     [SerializeField] GameObject activeItemHighlightObject;
     [SerializeField] GameObject selectedItemHighlightObject;
-    HighlightedItem activeItemHighlight;
-    HighlightedItem selectedItemHighlight;
+    HighlightedItem<T> activeItemHighlight;
+    HighlightedItem<T> selectedItemHighlight;
 
-    List<ListBoxItem> items = new List<ListBoxItem>();
+    List<ListBoxItem<T>> items = new List<ListBoxItem<T>>();
     public float Width { get; private set; }
     public float Height { get; private set; }
     int selectedItemIndex;
@@ -33,8 +33,17 @@ public class ListBox : MonoBehaviour
         }
     }
 
-    public object ActiveItem => items[ActiveItemIndex];
-    public object SelectedItem => items[SelectedItemIndex].Value;
+    public T ActiveItem
+    {
+        get => items[ActiveItemIndex].Value;
+        set => ActiveItemIndex = items.FindIndex(item => item.Value.Equals(value));
+    }
+
+    public T SelectedItem
+    {
+        get => items[SelectedItemIndex].Value;
+        set => SelectedItemIndex = items.FindIndex(item => item.Value.Equals(value));
+    }    
     
     int ClampItemIndex(int index)
     {
@@ -47,8 +56,8 @@ public class ListBox : MonoBehaviour
 
     void Start()
     {
-        activeItemHighlight = new HighlightedItem(activeItemHighlightObject);
-        selectedItemHighlight = new HighlightedItem(selectedItemHighlightObject);
+        activeItemHighlight = new HighlightedItem<T>(activeItemHighlightObject);
+        selectedItemHighlight = new HighlightedItem<T>(selectedItemHighlightObject);
     }
 
     void Update()
@@ -61,9 +70,9 @@ public class ListBox : MonoBehaviour
             SelectedItemIndex = ActiveItemIndex;
     }
 
-    public void AddItem(GameObject displayItem, object value)
+    public void AddItem(GameObject displayItem, T value)
     {
-        var lbItem = new ListBoxItem(displayItem, value);
+        var lbItem = new ListBoxItem<T>(displayItem, value);
         lbItem.Pos = new Vector2(0, -Height);
         Height += lbItem.Height;
         if (lbItem.Width > Width)
@@ -72,7 +81,7 @@ public class ListBox : MonoBehaviour
     }
 }
 
-class ListBoxItem
+class ListBoxItem<T>
 {
     RectTransform rectTransform;
     public GameObject displayItem;
@@ -85,7 +94,7 @@ class ListBoxItem
             rectTransform = displayItem.GetComponent<RectTransform>();
         }
     }
-    public object Value { get; set; }
+    public T Value { get; set; }
     public float Width => rectTransform.rect.width;
     public float Height => rectTransform.rect.height;
     public Vector2 Pos
@@ -94,14 +103,14 @@ class ListBoxItem
         set => rectTransform.anchoredPosition = value;
     }
 
-    public ListBoxItem(GameObject displayItem, object value)
+    public ListBoxItem(GameObject displayItem, T value)
     {
         DisplayItem = displayItem;
         Value = value;
     }
 }
 
-class HighlightedItem
+class HighlightedItem<T>
 {
     RectTransform rectTransform;
     public HighlightedItem(GameObject gameObject)
@@ -109,7 +118,7 @@ class HighlightedItem
         rectTransform = gameObject.GetComponent<RectTransform>();
     }
 
-    public void SetItem(ListBoxItem item)
+    public void SetItem(ListBoxItem<T> item)
     {
         rectTransform.anchoredPosition = item.Pos;
     }
