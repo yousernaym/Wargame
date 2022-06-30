@@ -22,7 +22,7 @@ public class Gameplay : MonoBehaviour
         map.Generate(hmap);
         Player.AssignStartingCities(players, map);
         map.Show();
-        MapRenderer.Instance.ViewEntireMap();
+        MapRenderer.Instance.SetZoomPreset(1);
     }
 
     void Update()

@@ -15,8 +15,18 @@ public class MapRenderer : MonoBehaviour
     Tile neutralCityTile;
     Camera Camera => Camera.main;
     RectTransform canvasRt;
-    float[] zoomLevels = new float[] { 10, 20, 30 };
-
+    float[] zoomPresets = new float[] { 10, 20, 30 };
+    public float ZoomLevel
+    {
+        get => -CamPos.z;
+        set
+        {
+            var pos = CamPos;
+            pos.z = -value;
+            CamPos = pos;
+        }
+    }
+    
     public Vector3 CamPos
     {
         get => Camera.transform.position;
@@ -39,11 +49,11 @@ public class MapRenderer : MonoBehaviour
     {
         var camPos = Camera.transform.position;
         if (Input.GetKeyDown(KeyCode.Alpha1))
-            camPos.z = -zoomLevels[0];
+            camPos.z = -zoomPresets[0];
         if (Input.GetKeyDown(KeyCode.Alpha2))
-            camPos.z = -zoomLevels[1];
+            camPos.z = -zoomPresets[1];
         if (Input.GetKeyDown(KeyCode.Alpha3))
-            camPos.z = -zoomLevels[2];
+            camPos.z = -zoomPresets[2];
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             ViewEntireMap();
@@ -110,12 +120,15 @@ public class MapRenderer : MonoBehaviour
         CamPos = new Vector3(pos.x + 0.5f, pos.y + 0.5f, CamPos.z);
     }
 
-
-
     public bool IsTileInView(Vector2Int pos)
     {
         var screenPos = TileToScreenPos(pos);
         return screenPos.x < Screen.width - 0.5f && screenPos.x > 0.5f
             && screenPos.y < Screen.height - 0.5f && screenPos.y > 0.5f;
+    }
+
+    public void SetZoomPreset(int preset)
+    {
+        ZoomLevel = zoomPresets[preset];
     }
 }
