@@ -28,13 +28,13 @@ public class Player : PlayerSettings
     //    }
     //}
 
-    public Tile CityTile { get; private set; }
+    //public Tile CityTile { get; private set; }
 
     List<City> cities = new List<City>();
     List<Unit> units = new List<Unit>();
     Unit currentUnit;
     Map globalMap;
-    Map map;
+    public Map Map { get; private set; }
     public GameObject GameObject { get; private set; }
     int currentTurn;
     int currentCityIndex;
@@ -71,15 +71,16 @@ public class Player : PlayerSettings
     {
         this.globalMap = globalMap;
         this.prodDialog = prodDialog;
-        CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
-        CityTile.color = Color;
+        //CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
+        //CityTile.color = Color;
         
         var grid = GameObject.Find("Grid").transform;
         var globalTilemap = grid.Find("GlobalTilemap").gameObject;
         GameObject = GameObject.Instantiate(globalTilemap, grid.transform);
         GameObject.name = Name;
         var mapRenderer = GameObject.GetComponent<MapRenderer>();
-        map = new Map(mapRenderer);
+        Map = new Map(mapRenderer);
+        Map.InitToUnexplored();
     }
 
     public static void AssignStartingCities(List<Player> players, Map map)
@@ -184,7 +185,7 @@ public class Player : PlayerSettings
         {
             if (unit != currentUnit && unit.CurrentTurn < currentTurn)
             {
-                var camPos = map.Renderer.CamPos;
+                var camPos = Map.Renderer.CamPos;
                 int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
                 if (distance < minDistance)
                 {
@@ -199,8 +200,8 @@ public class Player : PlayerSettings
     void SelectProd(City city)
     {
         selectingProd = true;
-        if (!map.Renderer.IsTileInView(city.Pos))
-            map.Renderer.MoveCameraToTile(city.Pos);
+        if (!Map.Renderer.IsTileInView(city.Pos))
+            Map.Renderer.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
     }
 

@@ -44,7 +44,7 @@ public class ProdDialog : Dialog
     public void Show(City city)
     {
         this.city = city;
-        var cityCanvasPos = MapRenderer.Instance.TileToCanvasPos(city.Pos);
+        var cityCanvasPos = city.Owner.Map.Renderer.TileToCanvasPos(city.Pos);
         Vector2 dialogPos = new Vector2(ParentSize.x * 3 / 4 - Size.x / 2, ParentSize.y / 2 + Size.y / 2);
         if (cityCanvasPos.x > ParentSize.x / 2)
             dialogPos.x -= ParentSize.x / 2;

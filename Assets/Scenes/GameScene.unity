@@ -949,7 +949,7 @@ GameObject:
   - component: {fileID: 1726255328}
   - component: {fileID: 1726255330}
   m_Layer: 0
-  m_Name: Tilemap
+  m_Name: GlobalTilemap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

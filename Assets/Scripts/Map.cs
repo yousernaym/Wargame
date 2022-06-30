@@ -5,7 +5,7 @@ using System.Threading;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public enum TileType { Land, Water, City }
+public enum TileType { Land, Water, City, Unexplored }
 public class Map
 {
     public MapRenderer Renderer { get; private set; }
@@ -55,6 +55,7 @@ public class Map
         }
 
         tiles[x, y] = newTile;
+        Renderer.UpdateTile(x, y, this);
     }
 
     void GenerateCities()
@@ -104,6 +105,15 @@ public class Map
         hmap.Generate();
         UpdateTilesFromHmap(hmap);
         GenerateCities();
+        //Renderer.UpdateTiles(this);
+    }
+
+    public void InitToUnexplored()
+    {
+        for (int y = 0; y < Height; y++)
+            for (int x = 0; x < Width; x++)
+                SetTileType(x, y, TileType.Unexplored);
+        //Renderer.UpdateTiles(this);
     }
 
     public void UpdateTilesFromHmap(Hmap hmap)
@@ -125,11 +135,12 @@ public class Map
         if (mapTile.TileType != TileType.City)
             throw new ArgumentException("Can't set city on non-city tile");
         mapTile.City = city;
+        Renderer.UpdateTile(city.Pos.x, city.Pos.y, this);
     }
 
     public void Show()
     {
-        MapRenderer.Instance.UpdateTilemap(this);
+        
     }
 
     public static int Distance(Vector2Int pos1, Vector2Int pos2)

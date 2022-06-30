@@ -6,13 +6,15 @@ using UnityEngine.Tilemaps;
 
 public class MapRenderer : MonoBehaviour
 {
-    public static MapRenderer Instance { get; private set; }
     float width;
     float height;
     Tilemap tilemap;
+    Tile whiteTile;
     Tile grassTile;
     Tile waterTile;
     Tile neutralCityTile;
+    Tile unexploredTile;
+    Tile[] playerCityTiles;
     Camera Camera => Camera.main;
     RectTransform canvasRt;
     float[] zoomPresets = new float[] { 10, 20, 30 };
@@ -35,10 +37,22 @@ public class MapRenderer : MonoBehaviour
     
     void Awake()
     {
-        Instance = this;
-        grassTile = Resources.Load<Tile>("Tiling/grassTile");
-        waterTile = Resources.Load<Tile>("Tiling/waterTile");
-        neutralCityTile = Resources.Load<Tile>("Tiling/cityTile");
+        whiteTile = Resources.Load<Tile>("Tiling/whiteTile");
+        grassTile = ScriptableObject.Instantiate(whiteTile);
+        grassTile.color = Color.green;
+        waterTile = ScriptableObject.Instantiate(whiteTile);
+        waterTile.color = Color.blue;
+        neutralCityTile = ScriptableObject.Instantiate(whiteTile);
+        neutralCityTile.color = Color.white;
+        unexploredTile = ScriptableObject.Instantiate(whiteTile);
+        unexploredTile.color = Color.black;
+        playerCityTiles = new Tile[PlayerSettings.MaxPlayers];
+        for (int i = 0; i < PlayerSettings.MaxPlayers; i++)
+        {
+            playerCityTiles[i] = ScriptableObject.Instantiate(whiteTile); ;
+            playerCityTiles[i].color = PlayerSettings.GetPlayerColor(i); ;
+        }
+                
         tilemap = gameObject.GetComponent<Tilemap>();
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
@@ -92,27 +106,32 @@ public class MapRenderer : MonoBehaviour
         return screenPos;
     }
 
-    public void UpdateTilemap(Map map)
+    //public void UpdateTiles(Map map)
+    //{
+    //    tilemap.ClearAllTiles();
+    //    for (int y = 0; y < map.Height; y++)
+    //    {
+    //        for (int x = 0; x < map.Width; x++)
+    //        {
+    //            UpdateTile(x, y, map);
+    //        }
+    //    }
+    //}
+
+    public void UpdateTile(int x, int y, Map map)
     {
-        tilemap.ClearAllTiles();
-        for (int y = 0; y < map.Height; y++)
+        Tile tile = null;
+        MapTile mapTile = map[x, y];
+        if (mapTile.TileType == TileType.Land)
+            tile = grassTile;
+        else if (mapTile.TileType == TileType.Water)
+            tile = waterTile;
+        else if (mapTile.TileType == TileType.City)
         {
-            for (int x = 0; x < map.Width; x++)
-            {
-                Tile tile = null;
-                MapTile mapTile = map[x, y];
-                if (mapTile.TileType == TileType.Land)
-                    tile = grassTile;
-                else if (mapTile.TileType == TileType.Water)
-                    tile = waterTile;
-                else if (mapTile.TileType == TileType.City)
-                {
-                    var owner = mapTile.City.Owner;
-                    tile = owner == null ? neutralCityTile : owner.CityTile;
-                }
-                tilemap.SetTile(new Vector3Int(x, y, 0), tile);
-            }
+            var owner = mapTile.City.Owner;
+            tile = owner == null ? neutralCityTile : playerCityTiles[owner.PlayerIndex];
         }
+        tilemap.SetTile(new Vector3Int(x, y, 0), tile);
     }
 
     public void MoveCameraToTile(Vector2Int pos, bool center = false)
@@ -130,5 +149,15 @@ public class MapRenderer : MonoBehaviour
     public void SetZoomPreset(int preset)
     {
         ZoomLevel = zoomPresets[preset];
+    }
+
+    public void Show()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
     }
 }
