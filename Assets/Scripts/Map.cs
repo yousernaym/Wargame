@@ -30,6 +30,7 @@ public class Map
     public Map(MapRenderer renderer)
     {
         Renderer = renderer;
+        renderer.ClearAllTiles();
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];

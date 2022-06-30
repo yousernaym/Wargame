@@ -118,6 +118,11 @@ public class MapRenderer : MonoBehaviour
     //    }
     //}
 
+    public void ClearAllTiles()
+    {
+        tilemap.ClearAllTiles();
+    }
+
     public void UpdateTile(int x, int y, Map map)
     {
         Tile tile = null;
