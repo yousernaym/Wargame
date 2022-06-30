@@ -25,7 +25,7 @@ public class Unit
 
     GameObject gameObject;
 
-    public Unit(UnitType unitType, Vector2Int pos)
+    public Unit(UnitType unitType, Vector2Int pos, Player owner)
     {
         if (UnitPrefabs == null)
         {
@@ -35,7 +35,7 @@ public class Unit
         }
         UnitType = unitType;
         UnitInfo = UnitInfo.Types[unitType];
-        gameObject = GameObject.Instantiate(UnitPrefabs[unitType]);
+        gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
         Pos = pos;
     }
 
@@ -54,14 +54,14 @@ public class Unit
 
 public class Army : Unit
 {
-    public Army(Vector2Int pos) : base(UnitType.Army, pos)
+    public Army(Vector2Int pos, Player owner) : base(UnitType.Army, pos, owner)
     {
     }
 }
 
 public class Fighter : Unit
 {
-    public Fighter(Vector2Int pos) : base(UnitType.Fighter, pos)
+    public Fighter(Vector2Int pos, Player owner) : base(UnitType.Fighter, pos, owner)
     {
     }
 }
@@ -69,7 +69,7 @@ public class Fighter : Unit
 public class Ship : Unit
 {
     protected bool canAttackArmies;
-    public Ship(UnitType unitType, Vector2Int pos, bool canAttackArmies) : base(unitType, pos)
+    public Ship(UnitType unitType, Vector2Int pos, Player owner, bool canAttackArmies) : base(unitType, pos, owner)
     {
         this.canAttackArmies = canAttackArmies;
     }
@@ -77,35 +77,35 @@ public class Ship : Unit
 
 public class Transport : Ship
 {
-    public Transport(Vector2Int pos) : base(UnitType.Transport, pos, false)
+    public Transport(Vector2Int pos, Player owner) : base(UnitType.Transport, pos, owner, false)
     {
     }
 }
 
 public class Destroyer : Ship
 {
-    public Destroyer(Vector2Int pos) : base(UnitType.Destroyer, pos, false)
+    public Destroyer(Vector2Int pos, Player owner) : base(UnitType.Destroyer, pos, owner, false)
     {
     }
 }
 
 public class Submarine : Ship
 {
-    public Submarine(Vector2Int pos) : base(UnitType.Submarine, pos, false)
+    public Submarine(Vector2Int pos, Player owner) : base(UnitType.Submarine, pos, owner, false)
     {
     }
 }
 
 public class Cruiser : Ship
 {
-    public Cruiser(Vector2Int pos) : base(UnitType.Cruiser, pos, true)
+    public Cruiser(Vector2Int pos, Player owner) : base(UnitType.Cruiser, pos, owner, true)
     {
     }
 }
 
 public class Battleship : Ship
 {
-    public Battleship(Vector2Int pos) : base(UnitType.Battleship, pos, true)
+    public Battleship(Vector2Int pos, Player owner) : base(UnitType.Battleship, pos, owner, true)
     {
     }
 }
@@ -114,7 +114,7 @@ public class Battleship : Ship
 
 public class Carrier : Ship
 {
-    public Carrier(Vector2Int pos) : base(UnitType.Carrier, pos, false)
+    public Carrier(Vector2Int pos, Player owner) : base(UnitType.Carrier, pos, owner, false)
     {
     }
 }

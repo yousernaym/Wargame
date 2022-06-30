@@ -40,21 +40,21 @@ public class City
         switch (Production)
         {
             case UnitType.Army:
-                return new Army(Pos);
+                return new Army(Pos, Owner);
             case UnitType.Fighter:
-                return new Fighter(Pos);
+                return new Fighter(Pos, Owner);
             case UnitType.Transport:
-                return new Transport(Pos);
+                return new Transport(Pos, Owner);
             case UnitType.Destroyer:
-                return new Destroyer(Pos);
+                return new Destroyer(Pos, Owner);
             case UnitType.Submarine:
-                return new Submarine(Pos);
+                return new Submarine(Pos, Owner);
             case UnitType.Cruiser:
-                return new Cruiser(Pos);
+                return new Cruiser(Pos, Owner);
             case UnitType.Battleship:
-                return new Battleship(Pos);
+                return new Battleship(Pos, Owner);
             case UnitType.Carrier:
-                return new Carrier(Pos);
+                return new Carrier(Pos, Owner);
             default: throw new NotImplementedException();
         }
     }

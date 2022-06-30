@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 public enum TileType { Land, Water, City }
 public class Map
 {
+    public MapRenderer Renderer { get; private set; }
     public int Width { get; set; }
     public int Height { get; set; }
     public float Aspect => (float)Height / Width;
@@ -26,13 +27,13 @@ public class Map
         }
     }
 
-    public Map()
+    public Map(MapRenderer renderer)
     {
+        Renderer = renderer;
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];
         Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
-        var tileMapObject = GameObject.Find("Tilemap");
     }
 
     void SetTileType(int x, int y, TileType tileType)

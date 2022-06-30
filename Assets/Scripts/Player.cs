@@ -34,7 +34,8 @@ public class Player : PlayerSettings
     List<Unit> units = new List<Unit>();
     Unit currentUnit;
     Map globalMap;
-    Map playerMap = new Map();
+    Map map;
+    public GameObject GameObject { get; private set; }
     int currentTurn;
     int currentCityIndex;
     City CurrentCity => cities[currentCityIndex];
@@ -72,6 +73,13 @@ public class Player : PlayerSettings
         this.prodDialog = prodDialog;
         CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
         CityTile.color = Color;
+        
+        var grid = GameObject.Find("Grid").transform;
+        var globalTilemap = grid.Find("GlobalTilemap").gameObject;
+        GameObject = GameObject.Instantiate(globalTilemap, grid.transform);
+        GameObject.name = Name;
+        var mapRenderer = GameObject.GetComponent<MapRenderer>();
+        map = new Map(mapRenderer);
     }
 
     public static void AssignStartingCities(List<Player> players, Map map)
@@ -176,7 +184,7 @@ public class Player : PlayerSettings
         {
             if (unit != currentUnit && unit.CurrentTurn < currentTurn)
             {
-                var camPos = MapRenderer.Instance.CamPos;
+                var camPos = map.Renderer.CamPos;
                 int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
                 if (distance < minDistance)
                 {
@@ -191,8 +199,8 @@ public class Player : PlayerSettings
     void SelectProd(City city)
     {
         selectingProd = true;
-        if (!MapRenderer.Instance.IsTileInView(city.Pos))
-            MapRenderer.Instance.MoveCameraToTile(city.Pos);
+        if (!map.Renderer.IsTileInView(city.Pos))
+            map.Renderer.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
     }
 

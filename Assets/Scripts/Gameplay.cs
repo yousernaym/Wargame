@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Gameplay : MonoBehaviour
 {
-    Map map;
+    Map globalMap;
     Hmap hmap;
     List<Player> players = new List<Player>();
     int currentTurn;
@@ -14,14 +14,16 @@ public class Gameplay : MonoBehaviour
 
     void Start()
     {
-        map = new Map();
+        var globalTilemap = GameObject.Find("Grid/GlobalTilemap");
+        var globalMapRenderer = globalTilemap.GetComponent<MapRenderer>();
+        globalMap = new Map(globalMapRenderer);
         hmap = gameObject.GetComponent<Hmap>();
-        hmap.Init(map);
+        hmap.Init(globalMap);
         foreach (var playerSetting in NewGameSettings.Instance.PlayerSettings)
-            players.Add(new Player(playerSetting, map, prodDialog));
-        map.Generate(hmap);
-        Player.AssignStartingCities(players, map);
-        map.Show();
+            players.Add(new Player(playerSetting, globalMap, prodDialog));
+        globalMap.Generate(hmap);
+        Player.AssignStartingCities(players, globalMap);
+        globalMap.Show();
         MapRenderer.Instance.SetZoomPreset(1);
     }
 
