@@ -17,8 +17,8 @@ public class PlayerSettings
     public string Name;
     public int AiLevel = 0; //0 = Human
     public bool IsRemote;
-    public float CombatFactor = 0.5f;
-    public float ProdFactor = 0.5f;
+    public float CombatEfficientcy = 0.5f;
+    public float ProdEfficiency = 0.5f;
 
     public PlayerSettings(int aILevel)
     {
@@ -40,8 +40,8 @@ public class PlayerSettings
         AiLevel = copy.AiLevel;
         Name = copy.Name;
         PlayerIndex = copy.PlayerIndex;
-        CombatFactor = copy.CombatFactor;
-        ProdFactor = copy.ProdFactor;
+        CombatEfficientcy = copy.CombatEfficientcy;
+        ProdEfficiency = copy.ProdEfficiency;
         Color = copy.Color;
     }
 

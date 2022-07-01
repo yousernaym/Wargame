@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public enum UnitType { Army, Fighter, Transport, Destroyer, Submarine, Cruiser, Battleship, Carrier }
@@ -8,7 +9,10 @@ public enum UnitAction { Left, Right, Up, Down, LeftUp, RightUp, LeftDown, Right
 
 public class Unit
 {
+    const float BlinkIntervalSeconds = 0.5f;
     static Dictionary<UnitType, GameObject> UnitPrefabs;
+    GameObject gameObject;
+    DateTime lastBlinkTime;
     public Unit Container { get; private set; }
     Vector2Int pos;
     public Vector2Int Pos 
@@ -30,8 +34,21 @@ public class Unit
     public UnitType Type { get; private set; }
     public int CurrentTurn { get; private set; }
     public Player Owner { get; private set; }
-
-    GameObject gameObject;
+    public bool isActive;
+    public bool IsActive 
+    {
+        get => isActive;
+        set
+        {
+            if (IsActive == value)
+                return;
+            if (value)
+                StartBlink(false);
+            else
+                StopBlink();
+            isActive = value;
+        }
+    }
 
     public Unit(UnitType unitType, Vector2Int pos, Player owner)
     {
@@ -55,6 +72,30 @@ public class Unit
     protected virtual bool CanMove(Vector2Int pos)
     {
         return false;
+    }
+
+    void StopBlink()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void StartBlink(bool initialState)
+    {
+        gameObject.SetActive(initialState);
+        lastBlinkTime = DateTime.Now;
+    }
+
+    public void UpdateBlink()
+    {
+        if (isActive)
+        {
+            var timeElapsed = DateTime.Now - lastBlinkTime;
+            if (timeElapsed.TotalSeconds > BlinkIntervalSeconds)
+            {
+                gameObject.SetActive(!gameObject.activeInHierarchy);
+                lastBlinkTime = DateTime.Now;
+            }
+        }
     }
 
     public bool ExecuteAction(UnitAction action)

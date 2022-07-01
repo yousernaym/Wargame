@@ -29,49 +29,49 @@ public class UnitInfo
         switch (unitType)
         {
             case UnitType.Army:
-                ProdTime = 6;
+                ProdTime = 3;
                 MovesPerTurn = 1;
                 MaxHp = 1;
                 CanMoveOn = new TileType[] { TileType.Land };
                 break;
             case UnitType.Fighter:
-                ProdTime = 12;
+                ProdTime = 6;
                 MovesPerTurn = 5;
                 MaxHp = 1;
                 CanMoveOn = new TileType[] { TileType.Land, TileType.Water };
                 break;
             case UnitType.Transport:
-                ProdTime = 36;
+                ProdTime = 18;
                 MovesPerTurn = 2;
                 MaxHp = 3;
                 CanMoveOn = new TileType[] { TileType.Water };
                 break;
             case UnitType.Destroyer:
-                ProdTime = 24;
+                ProdTime = 12;
                 MovesPerTurn = 3;
                 MaxHp = 3;
                 CanMoveOn = new TileType[] { TileType.Water };
                 break;
             case UnitType.Submarine:
-                ProdTime = 24;
+                ProdTime = 12;
                 MovesPerTurn = 2;
                 MaxHp = 2;
                 CanMoveOn = new TileType[] { TileType.Water };
                 break;
             case UnitType.Cruiser:
-                ProdTime = 48;
+                ProdTime = 24;
                 MovesPerTurn = 2;
                 MaxHp = 8;
                 CanMoveOn = new TileType[] { TileType.Water };
                 break;
             case UnitType.Battleship:
-                ProdTime = 60;
+                ProdTime = 30;
                 MovesPerTurn = 2;
                 MaxHp = 12;
                 CanMoveOn = new TileType[] { TileType.Water };
                 break;
             case UnitType.Carrier:
-                ProdTime = 50;
+                ProdTime = 25;
                 MovesPerTurn = 2;
                 MaxHp = 8;
                 CanMoveOn = new TileType[] { TileType.Water };

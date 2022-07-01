@@ -24,7 +24,7 @@ public class City
         set
         {
             production = value;
-            ProdTime = (int)(UnitInfo.Types[value].ProdTime * Owner.ProdFactor);
+            ProdTime = (int)(UnitInfo.Types[value].ProdTime / Owner.ProdEfficiency);
         }
     }
 

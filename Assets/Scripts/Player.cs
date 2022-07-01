@@ -14,6 +14,24 @@ public class Player : PlayerSettings
     List<City> cities = new List<City>();
     List<Unit> units = new List<Unit>();
     Unit currentUnit;
+    public Unit CurrentUnit
+    {
+        get => currentUnit;
+        private set
+        {
+            if (value == currentUnit)
+                return;
+            if (value != null)
+            {
+                Map.Renderer.MoveCameraToTile(value.Pos);
+                value.IsActive = true;
+
+            }
+            if (currentUnit != null)
+                currentUnit.IsActive = false;
+            currentUnit = value;
+        }
+    }
     Map globalMap;
     public Map Map { get; private set; }
     public GameObject GameObject { get; private set; }
@@ -37,7 +55,7 @@ public class Player : PlayerSettings
                     SyncWithGlobalMap();
                     break;
                 case PlayerState.Move:
-                    currentUnit = NextUnit();
+                    CurrentUnit = NextUnit();
                     break;
                 case PlayerState.EndTurn:
                     currentCityIndex = 0;
@@ -153,15 +171,15 @@ public class Player : PlayerSettings
                     State = PlayerState.Move;
                 break;
             case PlayerState.Move:
-                if (units.Count == 0 || currentUnit == null)
+                if (units.Count == 0 || CurrentUnit == null)
                 {
                     State = PlayerState.EndTurn;
                     break;
                 }
-                if (MoveUnit(currentUnit))
-                    Map.Renderer.MoveCameraToTile(currentUnit.Pos);
-                if (currentUnit.CurrentTurn > CurrentTurn)
-                    currentUnit = NextUnit();
+                if (MoveUnit(CurrentUnit))
+                    Map.Renderer.MoveCameraToTile(CurrentUnit.Pos);
+                if (CurrentUnit.CurrentTurn > CurrentTurn)
+                    CurrentUnit = NextUnit();
                 break;
             case PlayerState.EndTurn:
                 break;
@@ -179,16 +197,21 @@ public class Player : PlayerSettings
 
     bool MoveUnit_Human(Unit unit)
     {
+        unit.UpdateBlink();
         foreach (var mapping in InputMappings.UnitActions)
         {
             if (Input.GetKeyDown(mapping.Key))
             {
                 if (mapping.Value == UnitAction.Wait)
                 {
-                    currentUnit = NextUnit();
+                    CurrentUnit = NextUnit();
                     return false;
                 }
-                return unit.ExecuteAction(mapping.Value);
+                var moved = unit.ExecuteAction(mapping.Value);
+                //Reset blink to active state when user moves
+                if (moved)
+                    unit.StartBlink(true);
+                return moved;
             }
         }
         return false;
@@ -212,7 +235,7 @@ public class Player : PlayerSettings
         {
             if (unit.CurrentTurn < CurrentTurn)
                 throw new Exception("Unit out of sync with current turn number");
-            if (unit != currentUnit && unit.CurrentTurn == CurrentTurn)
+            if (unit != CurrentUnit && unit.CurrentTurn == CurrentTurn)
             {
                 var camPos = Map.Renderer.CamPos;
                 int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
@@ -225,11 +248,9 @@ public class Player : PlayerSettings
         }
 
         //All other units have already moved this turn and this unit still has not used its turn (it probably used the wait action)
-        if (nextUnit == null && currentUnit != null && currentUnit.CurrentTurn == CurrentTurn) 
-            nextUnit = currentUnit;
+        if (nextUnit == null && CurrentUnit != null && CurrentUnit.CurrentTurn == CurrentTurn) 
+            nextUnit = CurrentUnit;
 
-        if (nextUnit != null)
-            Map.Renderer.MoveCameraToTile(nextUnit.Pos);
         return nextUnit;
     }
 
