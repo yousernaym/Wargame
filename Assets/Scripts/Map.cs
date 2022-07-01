@@ -137,16 +137,6 @@ public class Map
         Renderer.UpdateTile(city.Pos.x, city.Pos.y, this);
     }
 
-    public void Show()
-    {
-        Renderer.Show();
-    }
-
-    public void Hide()
-    {
-        Renderer.Hide();
-    }
-
     public static int Distance(Vector2Int pos1, Vector2Int pos2)
     {
         var diff = pos1 - pos2;

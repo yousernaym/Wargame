@@ -11,25 +11,6 @@ public class Player : PlayerSettings
 {
     ProdDialog prodDialog;
     bool selectingProd;
-    //bool SelectingProd
-    //{
-    //    get => selectingProd;
-    //    set
-    //    {
-    //        if (value == selectingProd)
-    //            throw new ArgumentException();
-    //        selectingProd = value;
-    //        if (value)
-    //            return;
-    //        if (state == PlayerState.StartTurn)
-    //            currentCityIndex++;
-    //        else if (state == PlayerState.StartGame)
-    //            state = PlayerState.EndTurn;
-    //    }
-    //}
-
-    //public Tile CityTile { get; private set; }
-
     List<City> cities = new List<City>();
     List<Unit> units = new List<Unit>();
     Unit currentUnit;
@@ -71,12 +52,10 @@ public class Player : PlayerSettings
     {
         this.globalMap = globalMap;
         this.prodDialog = prodDialog;
-        //CityTile = Resources.Load<Tile>($"Tiling/player{PlayerNumber + 1}CityTile");
-        //CityTile.color = Color;
         
-        var grid = GameObject.Find("Grid").transform;
-        var globalTilemap = grid.Find("GlobalTilemap").gameObject;
-        GameObject = GameObject.Instantiate(globalTilemap, grid.transform);
+        //var grid = GameObject.Find("Grid").transform;
+        //var globalMapGO = (GameObject)Resources.Load("Tiling/GlobalMap");
+        GameObject = GameObject.Instantiate(globalMap.Renderer.gameObject, globalMap.Renderer.gameObject.transform.parent);
         GameObject.name = Name;
         var mapRenderer = GameObject.GetComponent<MapRenderer>();
         Map = new Map(mapRenderer);

@@ -16,9 +16,9 @@ public class Gameplay : MonoBehaviour
     void Start()
     {
         //var gameObjects = Resources.FindObjectsOfTypeAll(typeof(GameObject));
-        //var globalTilemap = (GameObject)gameObjects.First(obj => obj.name == "GlobalTilemap");
-        var globalTilemap = GameObject.Find("Grid/GlobalTilemap");
-        var globalMapRenderer = globalTilemap.GetComponent<MapRenderer>();
+        //var globalTilemap = (GameObject)gameObjects.First(obj => obj.name == "GlobalMap");
+        var globaMapGO = GameObject.Find("Grid/GlobalMap");
+        var globalMapRenderer = globaMapGO.GetComponent<MapRenderer>();
         globalMap = new Map(globalMapRenderer);
         hmap = gameObject.GetComponent<Hmap>();
         hmap.Init(globalMap);
@@ -26,6 +26,7 @@ public class Gameplay : MonoBehaviour
             players.Add(new Player(playerSetting, globalMap, prodDialog));
         globalMap.Generate(hmap);
         Player.AssignStartingCities(players, globalMap);
+        globalMap.Renderer.Hide();
         ShowMap(currentPlayer);
         currentPlayer.Map.Renderer.SetZoomPreset(1);
     }
@@ -49,8 +50,8 @@ public class Gameplay : MonoBehaviour
         if (currentPlayer.AiLevel == 0 && !currentPlayer.IsRemote)
         {
             foreach (var otherPlayer in players)
-                otherPlayer.Map.Hide();
-            player.Map.Show();
+                otherPlayer.Map.Renderer.Hide();
+            player.Map.Renderer.Show();
         }
     }
 }
