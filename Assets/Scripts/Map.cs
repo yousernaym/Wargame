@@ -30,7 +30,6 @@ public class Map
     public Map(MapRenderer renderer)
     {
         Renderer = renderer;
-        renderer.ClearAllTiles();
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];
@@ -114,7 +113,6 @@ public class Map
         for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
                 SetTileType(x, y, TileType.Unexplored);
-        //Renderer.UpdateTiles(this);
     }
 
     public void UpdateTilesFromHmap(Hmap hmap)
@@ -141,7 +139,12 @@ public class Map
 
     public void Show()
     {
-        
+        Renderer.Show();
+    }
+
+    public void Hide()
+    {
+        Renderer.Hide();
     }
 
     public static int Distance(Vector2Int pos1, Vector2Int pos2)

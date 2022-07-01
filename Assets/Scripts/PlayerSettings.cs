@@ -16,6 +16,7 @@ public class PlayerSettings
     public int PlayerIndex { get; private set; }
     public string Name;
     public int AiLevel = 0; //0 = Human
+    public bool IsRemote;
     public float CombatFactor = 0.5f;
     public float ProdFactor = 0.5f;
 

@@ -54,6 +54,7 @@ public class MapRenderer : MonoBehaviour
         }
                 
         tilemap = gameObject.GetComponent<Tilemap>();
+        tilemap.ClearAllTiles();
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
         canvasRt = GameObject.Find("Canvas").GetComponent<RectTransform>();
@@ -118,11 +119,6 @@ public class MapRenderer : MonoBehaviour
     //    }
     //}
 
-    public void ClearAllTiles()
-    {
-        tilemap.ClearAllTiles();
-    }
-
     public void UpdateTile(int x, int y, Map map)
     {
         Tile tile = null;
@@ -131,6 +127,8 @@ public class MapRenderer : MonoBehaviour
             tile = grassTile;
         else if (mapTile.TileType == TileType.Water)
             tile = waterTile;
+        else if (mapTile.TileType == TileType.Unexplored)
+            tile = unexploredTile;
         else if (mapTile.TileType == TileType.City)
         {
             var owner = mapTile.City.Owner;

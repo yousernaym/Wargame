@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Gameplay : MonoBehaviour
@@ -14,6 +15,8 @@ public class Gameplay : MonoBehaviour
 
     void Start()
     {
+        //var gameObjects = Resources.FindObjectsOfTypeAll(typeof(GameObject));
+        //var globalTilemap = (GameObject)gameObjects.First(obj => obj.name == "GlobalTilemap");
         var globalTilemap = GameObject.Find("Grid/GlobalTilemap");
         var globalMapRenderer = globalTilemap.GetComponent<MapRenderer>();
         globalMap = new Map(globalMapRenderer);
@@ -23,8 +26,8 @@ public class Gameplay : MonoBehaviour
             players.Add(new Player(playerSetting, globalMap, prodDialog));
         globalMap.Generate(hmap);
         Player.AssignStartingCities(players, globalMap);
-        globalMap.Show();
-        globalMap.Renderer.SetZoomPreset(1);
+        ShowMap(currentPlayer);
+        currentPlayer.Map.Renderer.SetZoomPreset(1);
     }
 
     void Update()
@@ -37,6 +40,17 @@ public class Gameplay : MonoBehaviour
                 currentPlayerIndex = 0;
                 currentTurn++;
             }
+            ShowMap(currentPlayer);
+        }
+    }
+
+    void ShowMap(Player player)
+    {
+        if (currentPlayer.AiLevel == 0 && !currentPlayer.IsRemote)
+        {
+            foreach (var otherPlayer in players)
+                otherPlayer.Map.Hide();
+            player.Map.Show();
         }
     }
 }
