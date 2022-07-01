@@ -158,7 +158,8 @@ public class Player : PlayerSettings
                     State = PlayerState.EndTurn;
                     break;
                 }
-                MoveUnit(currentUnit);
+                if (MoveUnit(currentUnit))
+                    Map.Renderer.MoveCameraToTile(currentUnit.Pos);
                 if (currentUnit.CurrentTurn > CurrentTurn)
                     currentUnit = NextUnit();
                 break;
@@ -224,10 +225,23 @@ public class Player : PlayerSettings
 
     void SelectProd(City city, bool goToCity)
     {
+        if (AiLevel == 0)
+            SelectProd_Human(city, goToCity);
+        else
+            SelectProd_AI(city);
+    }
+
+    void SelectProd_Human(City city, bool goToCity)
+    {
         selectingProd = true;
         if (goToCity)
             Map.Renderer.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
+    }
+
+    void SelectProd_AI(City city)
+    {
+        city.Production = UnitType.Army;
     }
 
     public void ShowProdDialog(City city)

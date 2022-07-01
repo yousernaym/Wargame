@@ -32,7 +32,11 @@ public class MapRenderer : MonoBehaviour
     public Vector3 CamPos
     {
         get => Camera.transform.position;
-        set => Camera.transform.position = value;
+        set
+        {
+            if (gameObject.activeInHierarchy)
+                Camera.transform.position = value;
+        }
     }
     
     void Awake()
@@ -139,6 +143,7 @@ public class MapRenderer : MonoBehaviour
 
     public void MoveCameraToTile(Vector2Int pos)
     {
+        bool active = gameObject.active;
         if (!IsTileInView(pos))
             CenterCameraOnTile(pos);
     }
