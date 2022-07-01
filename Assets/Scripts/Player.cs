@@ -17,7 +17,7 @@ public class Player : PlayerSettings
     Map globalMap;
     public Map Map { get; private set; }
     public GameObject GameObject { get; private set; }
-    int currentTurn;
+    public int CurrentTurn { get; private set; }
     int currentCityIndex;
     City CurrentCity => cities[currentCityIndex];
 
@@ -43,18 +43,23 @@ public class Player : PlayerSettings
                     currentCityIndex = 0;
                     foreach (var city in cities)
                         city.ProdTime--;
-                    currentTurn++;
+                    CurrentTurn++;
                     break;
             }
         }
     }
 
+    public void ExploreMap(Vector2Int pos)
+    {
+        Map.Explore(pos, globalMap);
+    }
+
     private void SyncWithGlobalMap()
     {
         foreach (var unit in units)
-            Map.Explore(unit.Pos, globalMap);
+            ExploreMap(unit.Pos);
         foreach (var city in cities)
-            Map.Explore(city.Pos, globalMap);
+            ExploreMap(city.Pos);
     }
 
     public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
@@ -65,7 +70,7 @@ public class Player : PlayerSettings
         GameObject = GameObject.Instantiate(globalMapPrefab, globalMap.Renderer.gameObject.transform.parent);
         GameObject.name = Name;
         var mapRenderer = GameObject.GetComponent<MapRenderer>();
-        Map = new Map(mapRenderer);
+        Map = new Map(mapRenderer, this);
         Map.InitToUnexplored();
     }
 
@@ -148,12 +153,13 @@ public class Player : PlayerSettings
                     State = PlayerState.Move;
                 break;
             case PlayerState.Move:
-                if (units.Count == 0 || (currentUnit = NextUnit()) == null)
+                if (units.Count == 0 || currentUnit == null)
                 {
                     State = PlayerState.EndTurn;
                     break;
                 }
-                if (currentUnit.Move())
+                MoveUnit(currentUnit);
+                if (currentUnit.CurrentTurn > CurrentTurn)
                     currentUnit = NextUnit();
                 break;
             case PlayerState.EndTurn:
@@ -162,14 +168,40 @@ public class Player : PlayerSettings
         return state;
     }
 
+    private bool MoveUnit(Unit currentUnit)
+    {
+        if (AiLevel == 0)
+            return MoveUnit_Human(currentUnit);
+        else
+            return MoveUnit_AI(currentUnit);
+    }
+
+    bool MoveUnit_Human(Unit unit)
+    {
+        if (Input.GetKeyDown(KeyCode.Keypad1))
+            return unit.ExecuteAction(UnitAction.LeftDown);
+        return false;
+    }
+
+    bool MoveUnit_AI(Unit currentUnit)
+    {
+        return currentUnit.ExecuteAction(UnitAction.Skip);
+    }
+
+   
+
     //Return unit closest to center of screen to minimize camera movement
     Unit NextUnit()
     {
         float minDistance = float.MaxValue;
         Unit nextUnit = null;
+        if (units.Count == 0)
+            return null;
         foreach (var unit in units)
         {
-            if (unit != currentUnit && unit.CurrentTurn < currentTurn)
+            if (unit.CurrentTurn < CurrentTurn)
+                throw new Exception("Unit out of sync with current turn number");
+            if (unit != currentUnit && unit.CurrentTurn == CurrentTurn)
             {
                 var camPos = Map.Renderer.CamPos;
                 int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
@@ -180,13 +212,20 @@ public class Player : PlayerSettings
                 }
             }
         }
+
+        //All other units have already moved this turn and this unit still has not used its turn (it probably used the wait action)
+        if (nextUnit == null && currentUnit != null && currentUnit.CurrentTurn == CurrentTurn) 
+            nextUnit = currentUnit;
+
+        if (nextUnit != null)
+            Map.Renderer.MoveCameraToTile(nextUnit.Pos);
         return nextUnit;
     }
 
     void SelectProd(City city, bool goToCity)
     {
         selectingProd = true;
-        if (goToCity && !Map.Renderer.IsTileInView(city.Pos))
+        if (goToCity)
             Map.Renderer.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
     }

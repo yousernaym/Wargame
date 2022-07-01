@@ -137,10 +137,17 @@ public class MapRenderer : MonoBehaviour
         tilemap.SetTile(new Vector3Int(x, y, 0), tile);
     }
 
-    public void MoveCameraToTile(Vector2Int pos, bool center = false)
+    public void MoveCameraToTile(Vector2Int pos)
+    {
+        if (!IsTileInView(pos))
+            CenterCameraOnTile(pos);
+    }
+
+    public void CenterCameraOnTile(Vector2Int pos)
     {
         CamPos = new Vector3(pos.x + 0.5f, pos.y + 0.5f, CamPos.z);
     }
+
 
     public bool IsTileInView(Vector2Int pos)
     {

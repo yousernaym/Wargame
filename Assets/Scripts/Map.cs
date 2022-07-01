@@ -8,6 +8,7 @@ using UnityEngine.Tilemaps;
 public enum TileType { Land, Water, City, Unexplored }
 public class Map
 {
+    Player owner;
     public MapRenderer Renderer { get; private set; }
     public int Width { get; set; }
     public int Height { get; set; }
@@ -27,13 +28,14 @@ public class Map
         }
     }
 
-    public Map(MapRenderer renderer)
+    public Map(MapRenderer renderer, Player owner)
     {
         Renderer = renderer;
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];
         Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
+        this.owner = owner;
     }
 
     MapTile CreateMapTile(int x, int y, TileType tileType)
@@ -75,11 +77,26 @@ public class Map
             {
                 if (x < 0 || x >= Width || y < 0 || y >= Height)
                     continue;
+                
                 var globalTile = globalMap[x, y];
+                
+                //Don't update tile of another friendly unit (it is already updated or will be)
+                if (globalTile.Unit != null && globalTile.Unit.Owner == owner)
+                    continue;
+
                 var tile = CreateMapTile(x, y, globalTile.TileType);
+                
                 if (globalTile.City != null)
                     tile.City.Owner = globalTile.City.Owner;
-                tile.Unit = globalTile.Unit;
+
+                //Create/destroy enemy unit
+                if (tile.Unit != null && tile.Unit.Owner != owner)
+                    tile.Unit.Destroy();
+                if (globalTile.Unit != null && globalTile.Unit.Owner != owner)
+                    tile.Unit = new Unit(globalTile.Unit.Type, globalTile.Unit.Pos, globalTile.Unit.Owner);
+                else
+                    tile.Unit = null;
+
                 Renderer.UpdateTile(x, y, this);
             }
         }

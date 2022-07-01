@@ -19,7 +19,7 @@ public class Gameplay : MonoBehaviour
         //var globalTilemap = (GameObject)gameObjects.First(obj => obj.name == "GlobalMap");
         var globaMapGO = GameObject.Find("Grid/GlobalMap");
         var globalMapRenderer = globaMapGO.GetComponent<MapRenderer>();
-        globalMap = new Map(globalMapRenderer);
+        globalMap = new Map(globalMapRenderer, null);
         hmap = gameObject.GetComponent<Hmap>();
         hmap.Init(globalMap);
         foreach (var playerSetting in NewGameSettings.Instance.PlayerSettings)
