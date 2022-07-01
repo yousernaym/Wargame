@@ -143,7 +143,6 @@ public class MapRenderer : MonoBehaviour
 
     public void MoveCameraToTile(Vector2Int pos)
     {
-        bool active = gameObject.active;
         if (!IsTileInView(pos))
             CenterCameraOnTile(pos);
     }

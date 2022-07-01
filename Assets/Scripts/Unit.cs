@@ -74,15 +74,13 @@ public class Unit
             newPos += new Vector2Int(1, 1);
         else if (action == UnitAction.LeftDown)
             newPos += new Vector2Int(-1, -1);
-        else if (action == UnitAction.RightUp)
-            newPos += new Vector2Int(1, 1);
+        else if (action == UnitAction.RightDown)
+            newPos += new Vector2Int(1, -1);
         else if (action == UnitAction.Skip)
         {
             EndTurn();
             return true;
         }
-        else if (action == UnitAction.Wait)
-            return true;
         
         if (newPos != pos)
             return Move(newPos);

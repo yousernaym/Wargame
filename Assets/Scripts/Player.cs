@@ -179,8 +179,18 @@ public class Player : PlayerSettings
 
     bool MoveUnit_Human(Unit unit)
     {
-        if (Input.GetKeyDown(KeyCode.Keypad1))
-            return unit.ExecuteAction(UnitAction.LeftDown);
+        foreach (var mapping in InputMappings.UnitActions)
+        {
+            if (Input.GetKeyDown(mapping.Key))
+            {
+                if (mapping.Value == UnitAction.Wait)
+                {
+                    currentUnit = NextUnit();
+                    return false;
+                }
+                return unit.ExecuteAction(mapping.Value);
+            }
+        }
         return false;
     }
 
