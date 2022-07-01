@@ -36,11 +36,14 @@ public class Map
         Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
     }
 
-    void SetTileType(int x, int y, TileType tileType)
+    MapTile CreateMapTile(int x, int y, TileType tileType)
     {
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
+            return null;
         var oldTile = tiles[x, y];
-        if (x < 0 || x >= Width || y < 0 || y >= Height || oldTile != null && oldTile.TileType == tileType)
-            return;
+        if (oldTile != null && oldTile.TileType == tileType)
+            return oldTile;
+
         MapTile newTile = new MapTile();
         newTile.TileType = tileType;
         if (tileType == TileType.City)
@@ -56,6 +59,30 @@ public class Map
 
         tiles[x, y] = newTile;
         Renderer.UpdateTile(x, y, this);
+        return newTile;
+    }
+
+    public void SetUnit(Unit unit)
+    {
+        tiles[unit.Pos.x, unit.Pos.y].Unit = unit;
+    }
+
+    public void Explore(Vector2Int pos, Map globalMap)
+    {
+        for (int y = pos.y - 1; y <= pos.y + 1; y++)
+        {
+            for (int x = pos.x - 1; x <= pos.x + 1; x++)
+            {
+                if (x < 0 || x >= Width || y < 0 || y >= Height)
+                    continue;
+                var globalTile = globalMap[x, y];
+                var tile = CreateMapTile(x, y, globalTile.TileType);
+                if (globalTile.City != null)
+                    tile.City.Owner = globalTile.City.Owner;
+                tile.Unit = globalTile.Unit;
+                Renderer.UpdateTile(x, y, this);
+            }
+        }
     }
 
     void GenerateCities()
@@ -69,7 +96,7 @@ public class Map
             if (HasAdjacentTileTypes(x, y, TileType.Water, TileType.Land)           //If tile is on coast, place city
                 || HasAdjacentTileTypes(x, y, TileType.Land) && randomValue > 0.75   //If tile has no adjacent water, place city some of the time
                 || randomValue > 0.9f)                                             //If tile has no adjacent land, place city even more rarely
-                SetTileType(x, y, TileType.City);
+                CreateMapTile(x, y, TileType.City);
         }
     }
 
@@ -112,7 +139,7 @@ public class Map
     {
         for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
-                SetTileType(x, y, TileType.Unexplored);
+                CreateMapTile(x, y, TileType.Unexplored);
     }
 
     public void UpdateTilesFromHmap(Hmap hmap)
@@ -123,7 +150,7 @@ public class Map
             for (int x = 0; x < Width; x++)
             {
                 TileType tileType = hmap.GetTileType(x, y);
-                SetTileType(x, y, tileType);
+                CreateMapTile(x, y, tileType);
             }
         }
     }

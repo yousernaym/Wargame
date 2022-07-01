@@ -34,6 +34,7 @@ public class Player : PlayerSettings
             {
                 case PlayerState.StartTurn:
                     currentCityIndex = 0;
+                    SyncWithGlobalMap();
                     break;
                 case PlayerState.Move:
                     currentUnit = NextUnit();
@@ -46,6 +47,14 @@ public class Player : PlayerSettings
                     break;
             }
         }
+    }
+
+    private void SyncWithGlobalMap()
+    {
+        foreach (var unit in units)
+            Map.Explore(unit.Pos, globalMap);
+        foreach (var city in cities)
+            Map.Explore(city.Pos, globalMap);
     }
 
     public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
@@ -127,13 +136,13 @@ public class Player : PlayerSettings
         {
             case PlayerState.StartGame:
                 State = PlayerState.StartTurn;
-                SelectProd(CurrentCity);
+                SelectProd(CurrentCity, true);
                 break;
             case PlayerState.StartTurn:
                 if (CurrentCity.IsProdDone())
                 {
                     units.Add(CurrentCity.CreateUnit());
-                    SelectProd(CurrentCity);
+                    SelectProd(CurrentCity, true);
                 }
                 if (++currentCityIndex >= cities.Count)
                     State = PlayerState.Move;
@@ -174,10 +183,10 @@ public class Player : PlayerSettings
         return nextUnit;
     }
 
-    void SelectProd(City city)
+    void SelectProd(City city, bool goToCity)
     {
         selectingProd = true;
-        if (!Map.Renderer.IsTileInView(city.Pos))
+        if (goToCity && !Map.Renderer.IsTileInView(city.Pos))
             Map.Renderer.MoveCameraToTile(city.Pos);
         ShowProdDialog(city);
     }

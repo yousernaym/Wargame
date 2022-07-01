@@ -22,6 +22,7 @@ public class Unit
     public int Damage { get; private set; }
     public UnitType UnitType { get; private set; }
     public int CurrentTurn { get; private set; }
+    public Player Owner { get; private set; }
 
     GameObject gameObject;
 
@@ -37,6 +38,8 @@ public class Unit
         UnitInfo = UnitInfo.Types[unitType];
         gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
         Pos = pos;
+        Owner = owner;
+        owner.Map.SetUnit(this);
     }
 
     public virtual bool Move()
