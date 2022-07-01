@@ -52,10 +52,8 @@ public class Player : PlayerSettings
     {
         this.globalMap = globalMap;
         this.prodDialog = prodDialog;
-        
-        //var grid = GameObject.Find("Grid").transform;
-        //var globalMapGO = (GameObject)Resources.Load("Tiling/GlobalMap");
-        GameObject = GameObject.Instantiate(globalMap.Renderer.gameObject, globalMap.Renderer.gameObject.transform.parent);
+        var globalMapPrefab = (GameObject)Resources.Load("Tiling/GlobalMap");
+        GameObject = GameObject.Instantiate(globalMapPrefab, globalMap.Renderer.gameObject.transform.parent);
         GameObject.name = Name;
         var mapRenderer = GameObject.GetComponent<MapRenderer>();
         Map = new Map(mapRenderer);

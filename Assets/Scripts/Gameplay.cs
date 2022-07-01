@@ -26,7 +26,6 @@ public class Gameplay : MonoBehaviour
             players.Add(new Player(playerSetting, globalMap, prodDialog));
         globalMap.Generate(hmap);
         Player.AssignStartingCities(players, globalMap);
-        globalMap.Renderer.Hide();
         ShowMap(currentPlayer);
         currentPlayer.Map.Renderer.SetZoomPreset(1);
     }
