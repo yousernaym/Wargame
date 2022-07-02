@@ -17,5 +17,13 @@ public static class InputMappings
         { KeyCode.Space, UnitAction.Skip},
         { KeyCode.W, UnitAction.Wait}
     };
-    //Dictionary<KeyCode, Order> Orders;
+    //public static Dictionary<KeyCode, Order> Orders;
+    public static Dictionary<KeyCode, CameraAction> CameraActions = new Dictionary<KeyCode, CameraAction>()
+    {
+        { KeyCode.Alpha1, CameraAction.ZoomPreset1 },
+        { KeyCode.Alpha2, CameraAction.ZoomPreset2 },
+        { KeyCode.Alpha3, CameraAction.ZoomPreset3 },
+        { KeyCode.Alpha4, CameraAction.ViewEntireMap },
+        { KeyCode.C, CameraAction.CenterOnActiveTile }
+    };
 }

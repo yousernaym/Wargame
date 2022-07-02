@@ -18,14 +18,14 @@ public class MapRenderer : MonoBehaviour
     Camera Camera => Camera.main;
     RectTransform canvasRt;
     float[] zoomPresets = new float[] { 10, 20, 30 };
+    float zoomLevel = 60;
     public float ZoomLevel
     {
-        get => -CamPos.z;
+        get => zoomLevel;
         set
         {
-            var pos = CamPos;
-            pos.z = -value;
-            CamPos = pos;
+            Camera.fieldOfView = value * 1;
+            zoomLevel = value;
         }
     }
     
@@ -62,25 +62,14 @@ public class MapRenderer : MonoBehaviour
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
         canvasRt = GameObject.Find("Canvas").GetComponent<RectTransform>();
+        ViewEntireMap();
     }
 
     void Update()
     {
-        var camPos = Camera.transform.position;
-        if (Input.GetKeyDown(KeyCode.Alpha1))
-            camPos.z = -zoomPresets[0];
-        if (Input.GetKeyDown(KeyCode.Alpha2))
-            camPos.z = -zoomPresets[1];
-        if (Input.GetKeyDown(KeyCode.Alpha3))
-            camPos.z = -zoomPresets[2];
-        if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-            ViewEntireMap();
-            return;
-        }
-        
-        Camera.transform.position = camPos;
     }
+
+    
 
     public void CenterCamera()
     {
@@ -95,6 +84,14 @@ public class MapRenderer : MonoBehaviour
         float z = -Math.Max(zh, zw);
 
         Camera.transform.SetPositionAndRotation(new Vector3(width / 2, height / 2, z), Quaternion.identity);
+    }
+
+    public void Pan(Vector2 screenSpaceOffset)
+    {
+        var tileStartScreenSpace = Camera.WorldToScreenPoint(new Vector3(0, 0, 0)).x;
+        var tileEndScreenSpace = Camera.WorldToScreenPoint(new Vector3(1, 0, 0)).x;
+        var tileSizeScreenSpace = tileEndScreenSpace - tileStartScreenSpace;
+        CamPos -= new Vector3(screenSpaceOffset.x, screenSpaceOffset.y, 0) / tileSizeScreenSpace;
     }
 
     public Vector2 TileToCanvasPos(Vector2Int pos)

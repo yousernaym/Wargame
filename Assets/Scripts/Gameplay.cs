@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+public enum CameraAction { ZoomIn, ZoomOut, ZoomPreset1, ZoomPreset2, ZoomPreset3, ViewEntireMap, PanLeft, PanRight, PanUp, PanDown, CenterOnActiveTile }
+
 public class Gameplay : MonoBehaviour
 {
     Map globalMap;
@@ -12,6 +14,7 @@ public class Gameplay : MonoBehaviour
     Player currentPlayer => players[currentPlayerIndex];
     int currentPlayerIndex;
     [SerializeField] ProdDialog prodDialog;
+    Vector2 panReferencePos;
 
     void Start()
     {
@@ -42,6 +45,7 @@ public class Gameplay : MonoBehaviour
             }
             ShowMap(currentPlayer);
         }
+        CheckCameraInput();
     }
 
     void ShowMap(Player player)
@@ -51,6 +55,38 @@ public class Gameplay : MonoBehaviour
             foreach (var otherPlayer in players)
                 otherPlayer.Map.Renderer.Hide();
             player.Map.Renderer.Show();
+        }
+    }
+
+    void CheckCameraInput()
+    {
+        if (currentPlayer.AiLevel > 0)
+            return;
+        var mapRenderer = currentPlayer.Map.Renderer;
+        foreach (var cameraAction in InputMappings.CameraActions)
+        {
+            if (Input.GetKeyDown(cameraAction.Key))
+            {
+                if (cameraAction.Value == CameraAction.ZoomPreset1)
+                    mapRenderer.SetZoomPreset(0);
+                else if (cameraAction.Value == CameraAction.ZoomPreset2)
+                    mapRenderer.SetZoomPreset(1);
+                else if (cameraAction.Value == CameraAction.ZoomPreset3)
+                    mapRenderer.SetZoomPreset(2);
+                else if (cameraAction.Value == CameraAction.ViewEntireMap)
+                    mapRenderer.ViewEntireMap();
+                return;
+            }
+        }
+
+        mapRenderer.ZoomLevel -= Input.mouseScrollDelta.y;
+        if (Input.GetMouseButtonDown(1))
+            panReferencePos = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        if (Input.GetMouseButton(1))
+        {
+            var mouseDelta = new Vector2(Input.mousePosition.x, Input.mousePosition.y) - new Vector2(panReferencePos.x, panReferencePos.y);
+            mapRenderer.Pan(mouseDelta);
+            panReferencePos = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
         }
     }
 }
