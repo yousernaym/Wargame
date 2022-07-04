@@ -31,6 +31,7 @@ public class Hmap : MonoBehaviour
     private void LoadResources()
     {
         material = Resources.Load<Material>("Tiling/HmapMaterial");
+        material = ScriptableObject.Instantiate(material); //Instantiate to prevent editing of the asset file and annoying git changes
         material.SetFloat("_WaveAmplitude", NewGameSettings.Instance.NewMapSettings.NoiseAmplitude);
         material.SetFloat("_WaveFrequency", NewGameSettings.Instance.NewMapSettings.NoiseFrequency);
         material.SetFloat("_WaveFbmGain", NewGameSettings.Instance.NewMapSettings.FbmGain);
