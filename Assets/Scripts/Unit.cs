@@ -80,7 +80,7 @@ public class Unit : ISerializable
             if (IsActive == value)
                 return;
             if (value)
-                StartBlink(false);
+                StartBlink(Owner.Map[Pos.x, Pos.y].City == null);
             else
                 StopBlink();
             isActive = value;
@@ -140,14 +140,14 @@ public class Unit : ISerializable
 
     void StopBlink()
     {
-        //gameObject.SetActive(true);
-        owner.Map.Renderer.Visible = true;
+        owner.Map[Pos.x, Pos.y].Unit = this;
+        owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
     }
 
     public void StartBlink(bool initialState)
     {
-        //gameObject.SetActive(initialState);
-        owner.Map.Renderer.Visible = true;
+        owner.Map[Pos.x, Pos.y].Unit = null;
+        owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
         lastBlinkTime = DateTime.Now;
     }
 
@@ -158,8 +158,8 @@ public class Unit : ISerializable
             var timeElapsed = DateTime.Now - lastBlinkTime;
             if (timeElapsed.TotalSeconds > BlinkIntervalSeconds)
             {
-                //gameObject.SetActive(!gameObject.activeInHierarchy);
-                owner.Map.Renderer.Visible = !owner.Map.Renderer.Visible;
+                owner.Map[Pos.x, Pos.y].Unit = owner.Map[Pos.x, Pos.y].Unit == null ? this : null;
+                owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
                 lastBlinkTime = DateTime.Now;
             }
         }
