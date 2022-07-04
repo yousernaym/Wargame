@@ -1,21 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class City
+[Serializable]
+public class City : ISerializable
 {
     public Vector2Int Pos { get; private set; }
     public int ProdTime { get; set; }
     public Player Owner { get; set; }
-
-    public City(Player owner, int x, int y)
-    {
-        this.Owner = owner;
-        Pos = new Vector2Int(x, y);
-    }
 
     UnitType production;
     public UnitType Production
@@ -26,6 +22,32 @@ public class City
             production = value;
             ProdTime = (int)(UnitInfo.Types[value].ProdTime / Owner.ProdEfficiency);
         }
+    }
+
+    public City(Player owner, int x, int y)
+    {
+        this.Owner = owner;
+        Pos = new Vector2Int(x, y);
+    }
+
+    public City(SerializationInfo info, StreamingContext ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "Pos")
+                Pos = (Vector2Int)entry.Value;
+            else if (entry.Name == "ProdTime")
+                ProdTime = (int)entry.Value;
+            else if (entry.Name == "Production")
+                production = (UnitType)entry.Value;
+        }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        info.AddValue("Pos", Pos);
+        info.AddValue("ProdTime", ProdTime);
+        info.AddValue("Production", Production);
     }
 
     public bool IsProdDone()

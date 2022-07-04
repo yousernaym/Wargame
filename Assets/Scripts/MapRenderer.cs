@@ -8,13 +8,16 @@ public class MapRenderer : MonoBehaviour
 {
     float width;
     float height;
-    Tilemap tilemap;
-    Tile whiteTile;
+    Tilemap baseTilemap;
+    Tilemap unitTilemap;
+    //Tile whiteTile;
     Tile grassTile;
     Tile waterTile;
     Tile neutralCityTile;
     Tile unexploredTile;
     Tile[] playerCityTiles;
+    Dictionary<UnitType, Tile[]> playerUnitTiles;
+
     Camera Camera => Camera.main;
     RectTransform canvasRt;
     float[] zoomPresets = new float[] { 10, 20, 30 };
@@ -38,10 +41,22 @@ public class MapRenderer : MonoBehaviour
                 Camera.transform.position = value;
         }
     }
-    
+
+    bool visible;
+    public bool Visible
+    {
+        get => visible;
+        set
+        {
+            visible = value;
+            baseTilemap.GetComponent<TilemapRenderer>().enabled = value;
+            unitTilemap.GetComponent<TilemapRenderer>().enabled = value;
+        }
+    }
+
     void Awake()
     {
-        whiteTile = Resources.Load<Tile>("Tiling/whiteTile");
+        var whiteTile = Resources.Load<Tile>("Tiling/whiteTile");
         grassTile = ScriptableObject.Instantiate(whiteTile);
         grassTile.color = Color.green;
         waterTile = ScriptableObject.Instantiate(whiteTile);
@@ -56,20 +71,32 @@ public class MapRenderer : MonoBehaviour
             playerCityTiles[i] = ScriptableObject.Instantiate(whiteTile); ;
             playerCityTiles[i].color = PlayerSettings.GetPlayerColor(i); ;
         }
-                
-        tilemap = gameObject.GetComponent<Tilemap>();
-        tilemap.ClearAllTiles();
+        playerUnitTiles = new Dictionary<UnitType, Tile[]>();
+        var whiteUnits = new Dictionary<UnitType, Tile>();
+        foreach (UnitType type in Enum.GetValues(typeof(UnitType)))
+        {
+            whiteUnits[type] = Resources.Load<Tile>("Tiling/Units/" + Enum.GetName(typeof(UnitType), type) + "Tile");
+            playerUnitTiles[type] = new Tile[PlayerSettings.MaxPlayers];
+            for (int i = 0; i < PlayerSettings.MaxPlayers; i++)
+            {
+                playerUnitTiles[type][i] = null;
+                if (whiteUnits[type] == null)
+                    continue;
+                playerUnitTiles[type][i] = ScriptableObject.Instantiate(whiteUnits[type]);
+            }
+        }
+
+        var btTransform = gameObject.transform.Find("BaseTilemap");
+        baseTilemap = btTransform.GetComponent<Tilemap>();
+        baseTilemap.ClearAllTiles();
+        unitTilemap = gameObject.transform.Find("UnitTilemap").GetComponent<Tilemap>();
+        unitTilemap.ClearAllTiles();
         width = NewGameSettings.Instance.NewMapSettings.Width.value;
         height = NewGameSettings.Instance.NewMapSettings.Height.value;
         canvasRt = GameObject.Find("Canvas").GetComponent<RectTransform>();
         ViewEntireMap();
+        Visible = false;
     }
-
-    void Update()
-    {
-    }
-
-    
 
     public void CenterCamera()
     {
@@ -103,39 +130,47 @@ public class MapRenderer : MonoBehaviour
 
     private Vector3 TileToScreenPos(Vector2Int pos)
     {
-        var worldPos = tilemap.GetCellCenterWorld(new Vector3Int(pos.x, pos.y, 0));
+        var worldPos = baseTilemap.GetCellCenterWorld(new Vector3Int(pos.x, pos.y, 0));
         var screenPos = Camera.WorldToScreenPoint(worldPos);
         return screenPos;
     }
 
-    //public void UpdateTiles(Map map)
-    //{
-    //    tilemap.ClearAllTiles();
-    //    for (int y = 0; y < map.Height; y++)
-    //    {
-    //        for (int x = 0; x < map.Width; x++)
-    //        {
-    //            UpdateTile(x, y, map);
-    //        }
-    //    }
-    //}
+    public void UpdateTiles(Map map)
+    {
+        baseTilemap.ClearAllTiles();
+        unitTilemap.ClearAllTiles();
+        for (int y = 0; y < map.Height; y++)
+        {
+            for (int x = 0; x < map.Width; x++)
+            {
+                UpdateTile(x, y, map);
+            }
+        }
+    }
 
     public void UpdateTile(int x, int y, Map map)
     {
-        Tile tile = null;
+        Tile baseTile = null;
         MapTile mapTile = map[x, y];
         if (mapTile.TileType == TileType.Land)
-            tile = grassTile;
+            baseTile = grassTile;
         else if (mapTile.TileType == TileType.Water)
-            tile = waterTile;
+            baseTile = waterTile;
         else if (mapTile.TileType == TileType.Unexplored)
-            tile = unexploredTile;
+            baseTile = unexploredTile;
         else if (mapTile.TileType == TileType.City)
         {
             var owner = mapTile.City.Owner;
-            tile = owner == null ? neutralCityTile : playerCityTiles[owner.PlayerIndex];
+            baseTile = owner == null ? neutralCityTile : playerCityTiles[owner.PlayerIndex];
         }
-        tilemap.SetTile(new Vector3Int(x, y, 0), tile);
+
+        if (mapTile.Unit != null)
+        {
+            if (playerUnitTiles[mapTile.Unit.Type] != null)
+                unitTilemap.SetTile(new Vector3Int(x, y, 0), playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex]);
+        }
+        baseTilemap.SetTile(new Vector3Int(x, y, 0), baseTile);
+
     }
 
     public void MoveCameraToTile(Vector2Int pos)
@@ -160,15 +195,5 @@ public class MapRenderer : MonoBehaviour
     public void SetZoomPreset(int preset)
     {
         ZoomLevel = zoomPresets[preset];
-    }
-
-    public void Show()
-    {
-        gameObject.SetActive(true);
-    }
-
-    public void Hide()
-    {
-        gameObject.SetActive(false);
     }
 }

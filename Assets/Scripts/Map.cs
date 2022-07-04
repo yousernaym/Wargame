@@ -1,15 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public enum TileType { Land, Water, City, Unexplored }
-public class Map
+
+[Serializable]
+public class Map : ISerializable
 {
-    Player owner;
-    public MapRenderer Renderer { get; private set; }
+    public Player Owner { get; set; }
+    public MapRenderer Renderer { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
     public float Aspect => (float)Height / Width;
@@ -35,7 +38,30 @@ public class Map
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
         tiles = new MapTile[Width, Height];
         Seed = NewGameSettings.Instance.NewMapSettings.GetSeed();
-        this.owner = owner;
+        this.Owner = owner;
+    }
+
+    public Map(SerializationInfo info, StreamingContext ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "Width")
+                Width = (int)entry.Value;
+            else if (entry.Name == "Height")
+                Height = (int)entry.Value;
+            else if (entry.Name == "Seed")
+                Seed = (int)entry.Value;
+            else if (entry.Name == "Tiles")
+                tiles = (MapTile[,])entry.Value;
+        }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        info.AddValue("Width", Width);
+        info.AddValue("Height", Height);
+        info.AddValue("Seed", Seed);
+        info.AddValue("Tiles", tiles);
     }
 
     MapTile CreateMapTile(int x, int y, TileType tileType)
@@ -77,26 +103,34 @@ public class Map
             {
                 if (x < 0 || x >= Width || y < 0 || y >= Height)
                     continue;
-                
-                var globalTile = globalMap[x, y];
-                
-                //Don't update tile of another friendly unit (it is already updated or will be)
-                if (globalTile.Unit != null && globalTile.Unit.Owner == owner)
-                    continue;
 
-                var tile = CreateMapTile(x, y, globalTile.TileType);
-                
-                if (globalTile.City != null)
-                    tile.City.Owner = globalTile.City.Owner;
+                var globalTile = globalMap[x, y];
+
+                if (x == pos.x && y == pos.y)
+                    tiles[x, y] = globalMap[x, y];
+                else
+                {
+                    //Don't update tile of another friendly unit/city (it is already updated or will be)
+                    if (globalTile.Unit != null && globalTile.Unit.Owner != Owner
+                        || globalTile.City != null && globalTile.City.Owner != Owner)
+                        continue;
+                    // Enemy units/cities can move/change without our knowledge so we should make a copy that will not change
+                    tiles[x, y] = globalMap[x, y].Clone();
+                }
+
+                //var tile = CreateMapTile(x, y, globalTile.TileType);
+
+                //if (globalTile.City != null)
+                //    tile.City.Owner = globalTile.City.Owner;
 
                 //Create/destroy enemy unit
-                if (tile.Unit != null && tile.Unit.Owner != owner)
-                    tile.Unit.Destroy();
-                if (globalTile.Unit != null && globalTile.Unit.Owner != owner)
-                    tile.Unit = new Unit(globalTile.Unit.Type, globalTile.Unit.Pos, globalTile.Unit.Owner);
-                else
-                    tile.Unit = null;
-
+                //if (tile.Unit != null && tile.Unit.Owner != owner)
+                //    tile.Unit.Destroy();
+                //if (globalTile.Unit != null)
+                //    tile.Unit = new Unit(globalTile.Unit.Type, globalTile.Unit.Pos, globalTile.Unit.Owner);
+                //else
+                //    tile.Unit = null;
+                //
                 Renderer.UpdateTile(x, y, this);
             }
         }
@@ -188,9 +222,45 @@ public class Map
     }
 }
 
-public class MapTile
+[Serializable]
+public class MapTile : ISerializable
 {
     public TileType TileType;
     public Unit Unit;
     public City City;
+
+    public MapTile()
+    {
+
+    }
+
+    public MapTile(SerializationInfo info, StreamingContext ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "TileType")
+                TileType = (TileType)entry.Value;
+            else if (entry.Name == "Unit")
+                Unit = (Unit)entry.Value;
+            else if (entry.Name == "City")
+                City = (City)entry.Value;
+        }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        info.AddValue("TileType", TileType);
+        info.AddValue("Unit", Unit);
+        info.AddValue("City", City);
+    }
+
+    public MapTile Clone()
+    {
+        var clone = Cloning.Clone<MapTile>(this);
+        if (Unit != null)
+            clone.Unit.Owner = Unit.Owner;
+        else if (City != null)
+            clone.City.Owner = City.Owner;
+        return clone;
+    }
 }

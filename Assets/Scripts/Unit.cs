@@ -1,40 +1,75 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using UnityEngine;
 
 public enum UnitType { Army, Fighter, Transport, Destroyer, Submarine, Cruiser, Battleship, Carrier }
 public enum UnitAction { Left, Right, Up, Down, LeftUp, RightUp, LeftDown, RightDown, Skip, Wait}
 
-public class Unit
+[Serializable]
+public class Unit : ISerializable
 {
     const float BlinkIntervalSeconds = 0.5f;
     static Dictionary<UnitType, GameObject> UnitPrefabs;
-    GameObject gameObject;
     DateTime lastBlinkTime;
-    public Unit Container { get; private set; }
-    Vector2Int pos;
+    
+    List<Unit> passengers;
+    Unit container;
+    
+    Vector2Int? pos;
     public Vector2Int Pos 
     {
-        get => pos;
+        get => (Vector2Int)pos;
         private set
         {
-            if (pos != null)
-                Owner.Map[pos.x, pos.y].Unit = null;
-            Owner.Map[value.x, value.y].Unit = this;
+            if (owner != null)
+            {
+                if (pos != null)
+                    Owner.GlobalMap[Pos.x, Pos.y].Unit = null;
+                UpdateMap();
+            }
             pos = value;
-            gameObject.transform.position = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);
-            Owner.ExploreMap(value);
         }
     }
     public UnitInfo UnitInfo { get; private set; }
     public int Hp { get; private set; }
     public int RemainingMoves { get; private set; }
-    public UnitType Type { get; private set; }
+    UnitType type;
+    public UnitType Type 
+    {
+        get => type;
+        private set
+        {
+            type = value;
+            UnitInfo = UnitInfo.Types[type];
+            Hp = UnitInfo.MaxHp;
+            RemainingMoves = UnitInfo.MovesPerTurn;
+        }
+    }
+
+
     public int CurrentTurn { get; private set; }
-    public Player Owner { get; private set; }
-    public bool isActive;
+    Player owner;
+    public Player Owner 
+    {
+        get => owner;
+        set
+        {
+            owner = value;
+            //UpdateMap();
+        }
+    }
+
+    public void UpdateMap()
+    {
+        Owner.GlobalMap[Pos.x, Pos.y].Unit = this;
+        owner.GlobalMap.Renderer.UpdateTile(Pos.x, Pos.y, Owner.GlobalMap);
+        Owner.ExploreMap(Pos);
+    }
+
+    bool isActive;
     public bool IsActive 
     {
         get => isActive;
@@ -54,19 +89,46 @@ public class Unit
     {
         if (UnitPrefabs == null)
         {
-            UnitPrefabs = new Dictionary<UnitType, GameObject>();
-            foreach (UnitType type in Enum.GetValues(typeof(UnitType)))
-                UnitPrefabs[type] = Resources.Load<GameObject>("Units/" + Enum.GetName(typeof(UnitType), type));
+            //UnitPrefabs = new Dictionary<UnitType, GameObject>();
+            //foreach (UnitType type in Enum.GetValues(typeof(UnitType)))
+                //UnitPrefabs[type] = Resources.Load<GameObject>("Units/" + Enum.GetName(typeof(UnitType), type));
         }
         Type = unitType;
-        UnitInfo = UnitInfo.Types[unitType];
-        Hp = UnitInfo.MaxHp;
-        RemainingMoves = UnitInfo.MovesPerTurn;
-        gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
-        Owner = owner;
+        
+        //gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
         Pos = pos;
+        Owner = owner;
+        UpdateMap();
         CurrentTurn = owner.CurrentTurn;
-        owner.Map.SetUnit(this);
+    }
+
+    public Unit(SerializationInfo info, StreamingContext ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "Pos")
+                pos = (Vector2Int)entry.Value;
+            else if (entry.Name == "Type")
+                Type = (UnitType)entry.Value;
+            else if (entry.Name == "CurrentTurn")
+                CurrentTurn = (int)entry.Value;
+            else if (entry.Name == "IsActive")
+                isActive = (bool)entry.Value;
+            else if (entry.Name == "passengers")
+            {
+                passengers = (List<Unit>)entry.Value;
+                foreach (var passenger in passengers)
+                    passenger.container = this;
+            }
+        }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        info.AddValue("Pos", Pos);
+        info.AddValue("Type", Type);
+        info.AddValue("CurrentTurn", CurrentTurn);
+        info.AddValue("IsActive", IsActive);
     }
 
     protected virtual bool CanMove(Vector2Int pos)
@@ -76,12 +138,14 @@ public class Unit
 
     void StopBlink()
     {
-        gameObject.SetActive(true);
+        //gameObject.SetActive(true);
+        owner.Map.Renderer.Visible = true;
     }
 
     public void StartBlink(bool initialState)
     {
-        gameObject.SetActive(initialState);
+        //gameObject.SetActive(initialState);
+        owner.Map.Renderer.Visible = true;
         lastBlinkTime = DateTime.Now;
     }
 
@@ -92,7 +156,8 @@ public class Unit
             var timeElapsed = DateTime.Now - lastBlinkTime;
             if (timeElapsed.TotalSeconds > BlinkIntervalSeconds)
             {
-                gameObject.SetActive(!gameObject.activeInHierarchy);
+                //gameObject.SetActive(!gameObject.activeInHierarchy);
+                owner.Map.Renderer.Visible = !owner.Map.Renderer.Visible;
                 lastBlinkTime = DateTime.Now;
             }
         }
@@ -151,15 +216,20 @@ public class Unit
         return true;
     }
 
-    public void Destroy()
-    {
-        GameObject.Destroy(gameObject);
-    }
+    //public void Destroy()
+    //{
+    //    GameObject.Destroy(gameObject);
+    //}
 }
 
+[Serializable]
 public class Army : Unit
 {
     public Army(Vector2Int pos, Player owner) : base(UnitType.Army, pos, owner)
+    {
+    }
+
+    public Army(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
     }
 
@@ -169,13 +239,19 @@ public class Army : Unit
     }
 }
 
+[Serializable]
 public class Fighter : Unit
 {
     public Fighter(Vector2Int pos, Player owner) : base(UnitType.Fighter, pos, owner)
     {
     }
+
+    public Fighter(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
+[Serializable]
 public class Ship : Unit
 {
     protected bool canAttackArmies;
@@ -183,48 +259,86 @@ public class Ship : Unit
     {
         this.canAttackArmies = canAttackArmies;
     }
+
+    public Ship(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "CanAttackArmies")
+                canAttackArmies = (bool)entry.Value;
+        }
+    }
 }
 
+[Serializable]
 public class Transport : Ship
 {
     public Transport(Vector2Int pos, Player owner) : base(UnitType.Transport, pos, owner, false)
     {
     }
+
+    public Transport(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
+[Serializable]
 public class Destroyer : Ship
 {
     public Destroyer(Vector2Int pos, Player owner) : base(UnitType.Destroyer, pos, owner, false)
     {
     }
+
+    public Destroyer(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
+[Serializable]
 public class Submarine : Ship
 {
     public Submarine(Vector2Int pos, Player owner) : base(UnitType.Submarine, pos, owner, false)
     {
     }
+
+    public Submarine(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
+[Serializable]
 public class Cruiser : Ship
 {
     public Cruiser(Vector2Int pos, Player owner) : base(UnitType.Cruiser, pos, owner, true)
     {
     }
+
+    public Cruiser(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
+[Serializable]
 public class Battleship : Ship
 {
     public Battleship(Vector2Int pos, Player owner) : base(UnitType.Battleship, pos, owner, true)
     {
     }
+
+    public Battleship(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
 
-
-
+[Serializable]
 public class Carrier : Ship
 {
     public Carrier(Vector2Int pos, Player owner) : base(UnitType.Carrier, pos, owner, false)
     {
     }
+
+    public Carrier(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+    }
 }
+

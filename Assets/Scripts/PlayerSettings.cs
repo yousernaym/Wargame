@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using UnityEngine;
 
-public class PlayerSettings
+[Serializable]
+public class PlayerSettings : ISerializable
 {
     public static int PlayerCount { get; private set; }
     static Color[] playerColors;
@@ -16,7 +18,6 @@ public class PlayerSettings
     public int PlayerIndex { get; private set; }
     public string Name;
     public int AiLevel = 0; //0 = Human
-    public bool IsRemote;
     public float CombatEfficientcy = 0.5f;
     public float ProdEfficiency = 0.5f;
 
@@ -25,14 +26,6 @@ public class PlayerSettings
         AiLevel = aILevel;
         PlayerIndex = PlayerCount++;
         Name = $"Player {PlayerIndex}";
-        //if (PlayerNumber == 0)
-        //    Color = Color.red;
-        //else if (PlayerNumber == 1)
-        //    Color = Color.rgb;
-        //else if (PlayerNumber == 2)
-        //    Color = Color.yellow;
-        //else if (PlayerNumber == 3)
-        //    Color = Color.cyan;
     }
 
     protected PlayerSettings(PlayerSettings copy)
@@ -43,6 +36,32 @@ public class PlayerSettings
         CombatEfficientcy = copy.CombatEfficientcy;
         ProdEfficiency = copy.ProdEfficiency;
         Color = copy.Color;
+    }
+
+    public PlayerSettings(SerializationInfo info, StreamingContext ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "PlayerIndex")
+                PlayerIndex = (int)entry.Value;
+            else if (entry.Name == "Name")
+                Name = (string)entry.Value;
+            else if (entry.Name == "AiLevel")
+                AiLevel = (int)entry.Value;
+            else if (entry.Name == "CombatEfficientcy")
+                CombatEfficientcy = (float)entry.Value;
+            else if (entry.Name == "ProdEfficiency")
+                ProdEfficiency = (float)entry.Value;
+        }
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        info.AddValue("PlayerIndex", PlayerIndex);
+        info.AddValue("Name", Name);
+        info.AddValue("AiLevel", AiLevel);
+        info.AddValue("CombatEfficientcy", CombatEfficientcy);
+        info.AddValue("ProdEfficiency", ProdEfficiency);
     }
 
     public static List<PlayerSettings> CreateDefault()

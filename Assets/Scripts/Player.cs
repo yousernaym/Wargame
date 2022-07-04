@@ -2,14 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public enum PlayerState { StartGame, StartTurn, Move, EndTurn }
 
+[Serializable]
 public class Player : PlayerSettings
 {
-    ProdDialog prodDialog;
+    public ProdDialog ProdDialog;
     bool selectingProd;
     List<City> cities = new List<City>();
     List<Unit> units = new List<Unit>();
@@ -32,9 +34,8 @@ public class Player : PlayerSettings
             currentUnit = value;
         }
     }
-    Map globalMap;
+    public Map GlobalMap { get; private set; }
     public Map Map { get; private set; }
-    public GameObject GameObject { get; private set; }
     public int CurrentTurn { get; private set; }
     int currentCityIndex;
     City CurrentCity => cities[currentCityIndex];
@@ -52,7 +53,7 @@ public class Player : PlayerSettings
             {
                 case PlayerState.StartTurn:
                     currentCityIndex = 0;
-                    SyncWithGlobalMap();
+                    //SyncWithGlobalMap();
                     break;
                 case PlayerState.Move:
                     CurrentUnit = NextUnit();
@@ -69,7 +70,7 @@ public class Player : PlayerSettings
 
     public void ExploreMap(Vector2Int pos)
     {
-        Map.Explore(pos, globalMap);
+        Map.Explore(pos, GlobalMap);
     }
 
     private void SyncWithGlobalMap()
@@ -82,14 +83,53 @@ public class Player : PlayerSettings
 
     public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
     {
-        this.globalMap = globalMap;
-        this.prodDialog = prodDialog;
+        this.GlobalMap = globalMap;
+        this.ProdDialog = prodDialog;
         var globalMapPrefab = (GameObject)Resources.Load("Tiling/GlobalMap");
-        GameObject = GameObject.Instantiate(globalMapPrefab, globalMap.Renderer.gameObject.transform.parent);
-        GameObject.name = Name;
-        var mapRenderer = GameObject.GetComponent<MapRenderer>();
+        var tilemapsParent = GameObject.Instantiate(globalMapPrefab, globalMap.Renderer.gameObject.transform.parent);
+        tilemapsParent.name = Name;
+        var mapRenderer = tilemapsParent.GetComponent<MapRenderer>();
         Map = new Map(mapRenderer, this);
         Map.InitToUnexplored();
+    }
+
+    public Player(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
+    {
+        foreach (SerializationEntry entry in info)
+        {
+            if (entry.Name == "Cities")
+                cities = (List<City>)entry.Value;
+            else if (entry.Name == "Units")
+                units = (List<Unit>)entry.Value;
+            else if (entry.Name == "CurrentTurn")
+                CurrentTurn = (int)entry.Value;
+            else if (entry.Name == "Map")
+                Map = (Map)entry.Value;
+        }
+        state = PlayerState.Move;
+        Map.Owner = this;
+        foreach (var city in cities)
+            city.Owner = this;
+        foreach (var unit in units)
+        {
+            unit.Owner = this;
+            unit.UpdateMap();
+            if (unit.IsActive)
+            {
+                CurrentUnit = unit;
+                unit.StartBlink(true);
+            }
+        }
+
+    }
+
+    new public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+    {
+        base.GetObjectData(info, ctxt);
+        info.AddValue("Cities", cities);
+        info.AddValue("Units", units);
+        info.AddValue("CurrentTurn", CurrentTurn);
+        info.AddValue("Map", Map);
     }
 
     public static void AssignStartingCities(List<Player> players, Map map)
@@ -142,7 +182,7 @@ public class Player : PlayerSettings
             player.RemoveCity(city);
         city.Owner = this;
         cities.Add(city);
-        globalMap.SetCity(city);
+        GlobalMap.SetCity(city);
     }
 
     void RemoveCity(City city)
@@ -277,7 +317,7 @@ public class Player : PlayerSettings
 
     public void ShowProdDialog(City city)
     {
-        prodDialog.Show(city);
+        ProdDialog.Show(city);
     }
 
     public void OnProdDialogClose()
