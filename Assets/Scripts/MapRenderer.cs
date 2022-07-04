@@ -83,6 +83,7 @@ public class MapRenderer : MonoBehaviour
                 if (whiteUnits[type] == null)
                     continue;
                 playerUnitTiles[type][i] = ScriptableObject.Instantiate(whiteUnits[type]);
+                playerUnitTiles[type][i].color = PlayerSettings.GetPlayerColor(i);
             }
         }
 
@@ -166,9 +167,10 @@ public class MapRenderer : MonoBehaviour
 
         if (mapTile.Unit != null)
         {
-            if (playerUnitTiles[mapTile.Unit.Type] != null)
-                unitTilemap.SetTile(new Vector3Int(x, y, 0), playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex]);
+            var tile = playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex];
+            unitTilemap.SetTile(new Vector3Int(x, y, 0), tile);
         }
+
         baseTilemap.SetTile(new Vector3Int(x, y, 0), baseTile);
 
     }

@@ -117,20 +117,6 @@ public class Map : ISerializable
                     // Enemy units/cities can move/change without our knowledge so we should make a copy that will not change
                     tiles[x, y] = globalMap[x, y].Clone();
                 }
-
-                //var tile = CreateMapTile(x, y, globalTile.TileType);
-
-                //if (globalTile.City != null)
-                //    tile.City.Owner = globalTile.City.Owner;
-
-                //Create/destroy enemy unit
-                //if (tile.Unit != null && tile.Unit.Owner != owner)
-                //    tile.Unit.Destroy();
-                //if (globalTile.Unit != null)
-                //    tile.Unit = new Unit(globalTile.Unit.Type, globalTile.Unit.Pos, globalTile.Unit.Owner);
-                //else
-                //    tile.Unit = null;
-                //
                 Renderer.UpdateTile(x, y, this);
             }
         }
