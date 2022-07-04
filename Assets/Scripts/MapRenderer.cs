@@ -165,12 +165,11 @@ public class MapRenderer : MonoBehaviour
             baseTile = owner == null ? neutralCityTile : playerCityTiles[owner.PlayerIndex];
         }
 
+        Tile unitTile = null;
         if (mapTile.Unit != null)
-        {
-            var tile = playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex];
-            unitTilemap.SetTile(new Vector3Int(x, y, 0), tile);
-        }
+            unitTile = playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex];
 
+        unitTilemap.SetTile(new Vector3Int(x, y, 0), unitTile);
         baseTilemap.SetTile(new Vector3Int(x, y, 0), baseTile);
 
     }

@@ -28,9 +28,11 @@ public class Unit : ISerializable
             {
                 if (pos != null)
                     Owner.GlobalMap[Pos.x, Pos.y].Unit = null;
+                pos = value;
                 UpdateMap();
             }
-            pos = value;
+            else
+                pos = value;
         }
     }
     public UnitInfo UnitInfo { get; private set; }
