@@ -29,7 +29,7 @@ public class Unit : ISerializable
                 if (pos != null)
                     Owner.GlobalMap[Pos.x, Pos.y].Unit = null;
                 pos = value;
-                UpdateMap();
+                Owner.AddUnit(this);
             }
             else
                 pos = value;
@@ -60,15 +60,7 @@ public class Unit : ISerializable
         set
         {
             owner = value;
-            //UpdateMap();
         }
-    }
-
-    public void UpdateMap()
-    {
-        Owner.GlobalMap[Pos.x, Pos.y].Unit = this;
-        owner.GlobalMap.Renderer.UpdateTile(Pos.x, Pos.y, Owner.GlobalMap);
-        Owner.ExploreMap(Pos);
     }
 
     bool isActive;
@@ -87,6 +79,8 @@ public class Unit : ISerializable
         }
     }
 
+    public bool IsWaiting { get; set; }
+
     public Unit(UnitType unitType, Vector2Int pos, Player owner)
     {
         if (UnitPrefabs == null)
@@ -100,7 +94,7 @@ public class Unit : ISerializable
         //gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
         Pos = pos;
         Owner = owner;
-        UpdateMap();
+        Owner.AddUnit(this);
         CurrentTurn = owner.CurrentTurn;
     }
 

@@ -56,7 +56,7 @@ public class Player : PlayerSettings
                     //SyncWithGlobalMap();
                     break;
                 case PlayerState.Move:
-                    CurrentUnit = NextUnit();
+                    CurrentUnit = GetNextUnit();
                     break;
                 case PlayerState.EndTurn:
                     currentCityIndex = 0;
@@ -68,17 +68,19 @@ public class Player : PlayerSettings
         }
     }
 
-    public void ExploreMap(Vector2Int pos)
+    public void AddUnit(Unit unit)
     {
-        Map.Explore(pos, GlobalMap);
+        units.Add(unit);
+        GlobalMap.SetUnit(unit);
+        Map.Explore(unit.Pos, GlobalMap);
     }
 
     private void SyncWithGlobalMap()
     {
         foreach (var unit in units)
-            ExploreMap(unit.Pos);
+            Map.Explore(unit.Pos, GlobalMap);
         foreach (var city in cities)
-            ExploreMap(city.Pos);
+            Map.Explore(city.Pos, GlobalMap);
     }
 
     public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
@@ -113,7 +115,7 @@ public class Player : PlayerSettings
         foreach (var unit in units)
         {
             unit.Owner = this;
-            unit.UpdateMap();
+            unit.Owner.AddUnit(unit);
             if (unit.IsActive)
             {
                 CurrentUnit = unit;
@@ -183,6 +185,7 @@ public class Player : PlayerSettings
         city.Owner = this;
         cities.Add(city);
         GlobalMap.SetCity(city);
+        Map.Explore(city.Pos, GlobalMap);
     }
 
     void RemoveCity(City city)
@@ -219,7 +222,7 @@ public class Player : PlayerSettings
                 if (MoveUnit(CurrentUnit))
                     Map.Renderer.MoveCameraToTile(CurrentUnit.Pos);
                 if (CurrentUnit.CurrentTurn > CurrentTurn)
-                    CurrentUnit = NextUnit();
+                    CurrentUnit = GetNextUnit();
                 break;
             case PlayerState.EndTurn:
                 break;
@@ -244,7 +247,8 @@ public class Player : PlayerSettings
             {
                 if (mapping.Value == UnitAction.Wait)
                 {
-                    CurrentUnit = NextUnit();
+                    currentUnit.IsWaiting = true;
+                    CurrentUnit = GetNextUnit();
                     return false;
                 }
                 var moved = unit.ExecuteAction(mapping.Value);
@@ -265,18 +269,25 @@ public class Player : PlayerSettings
    
 
     //Return unit closest to center of screen to minimize camera movement
-    Unit NextUnit()
+    Unit GetNextUnit()
     {
         float minDistance = float.MaxValue;
         Unit nextUnit = null;
         if (units.Count == 0)
             return null;
+        bool unitsAreWaiting = false;
         foreach (var unit in units)
         {
             if (unit.CurrentTurn < CurrentTurn)
                 throw new Exception("Unit out of sync with current turn number");
             if (unit != CurrentUnit && unit.CurrentTurn == CurrentTurn)
             {
+                if (unit.IsWaiting)
+                {
+                    unitsAreWaiting = true;
+                    continue;
+                }
+             
                 var camPos = Map.Renderer.CamPos;
                 int distance = Map.Distance(unit.Pos, new Vector2Int((int)camPos.x, (int)camPos.y));
                 if (distance < minDistance)
@@ -287,9 +298,20 @@ public class Player : PlayerSettings
             }
         }
 
-        //All other units have already moved this turn and this unit still has not used its turn (it probably used the wait action)
-        if (nextUnit == null && CurrentUnit != null && CurrentUnit.CurrentTurn == CurrentTurn) 
-            nextUnit = CurrentUnit;
+        if (nextUnit == null)
+        {
+            if (unitsAreWaiting)
+            {
+                foreach (var unit in units)
+                    unit.IsWaiting = false;
+                nextUnit = GetNextUnit();
+            }
+            else if (CurrentUnit != null && CurrentUnit.CurrentTurn == CurrentTurn)
+            {
+                currentUnit.IsWaiting = false;
+                nextUnit = currentUnit; //This is the last unit that hasn't moved. It probably tried to wait.
+            }
+        }
 
         return nextUnit;
     }

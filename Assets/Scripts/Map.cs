@@ -93,6 +93,7 @@ public class Map : ISerializable
     public void SetUnit(Unit unit)
     {
         tiles[unit.Pos.x, unit.Pos.y].Unit = unit;
+        Renderer.UpdateTile(unit.Pos.x, unit.Pos.y, this);
     }
 
     public void Explore(Vector2Int pos, Map globalMap)
@@ -194,12 +195,14 @@ public class Map : ISerializable
 
     public void SetCity(City city)
     {
-        var mapTile = this[city.Pos.x, city.Pos.y];
+        var mapTile = tiles[city.Pos.x, city.Pos.y];
         if (mapTile.TileType != TileType.City)
             throw new ArgumentException("Can't set city on non-city tile");
         mapTile.City = city;
         Renderer.UpdateTile(city.Pos.x, city.Pos.y, this);
     }
+
+    
 
     public static int Distance(Vector2Int pos1, Vector2Int pos2)
     {
