@@ -28,7 +28,7 @@ public class Unit : ISerializable
             if (owner != null)
             {
                 if (pos != null)
-                    Owner.GlobalMap[Pos.x, Pos.y].Unit = null;
+                    GetTile(Pos).Unit = null;
                 pos = value;
                 Owner.AddUnit(this);
             }
@@ -37,7 +37,18 @@ public class Unit : ISerializable
         }
     }
     public UnitInfo UnitInfo { get; private set; }
-    public int Hp { get; private set; }
+    int hp;
+    public int Hp
+    {
+        get => hp;
+        private set
+        {
+            hp = Math.Min(UnitInfo.MaxHp, value);
+            if (hp <= 0)
+                Kill();
+        }
+    }
+
     public int RemainingMoves { get; private set; }
     UnitType type;
     public UnitType Type 
@@ -132,12 +143,19 @@ public class Unit : ISerializable
     {
         return tile.TileType == TileType.City
             && tile.City.Owner == owner
-            || UnitInfo.MoveTargets.Any(tileType => tileType == tile.TileType);
+            || UnitInfo.MoveTargets.Any(tileType => tileType == tile.TileType)
+            && tile.Unit.owner != owner;
     }
 
-    protected virtual bool CanAttack(Unit unit)
+    protected virtual bool CanAttack(MapTile tile)
     {
-        return UnitInfo.AttackTargets.Any(type => type == unit.Type);
+        return tile.Unit != null &&
+            tile.Unit.owner != owner &&
+            UnitInfo.AttackTargets.Any(type => type == tile.Unit.Type)
+            ||
+            tile.City != null &&
+            tile.City.Owner != owner &&
+            Type == UnitType.Army;
     }
 
     void StopBlink()
@@ -198,10 +216,12 @@ public class Unit : ISerializable
         return false;
     }
 
-    void EndTurn()
+    protected virtual void EndTurn()
     {
         CurrentTurn++;
         RemainingMoves = UnitInfo.MovesPerTurn;
+        if (GetTile(Pos).TileType == TileType.City)
+            Hp++;
     }
 
     bool Sleep()
@@ -212,16 +232,19 @@ public class Unit : ISerializable
 
     bool Move(Vector2Int newPos)
     {
-        var tile = owner.GlobalMap[newPos.x, newPos.y];
-        if (tile.Unit != null && CanAttack(tile.Unit))
+        var tile = GetTile(newPos);
+        bool attacking = false;
+        if (tile.Unit != null && CanAttack(tile))
         {
-            if (!Attack(tile.Unit))
+            if (!(attacking = Attack(tile.Unit)))
                 return false;
         }
-        if (!CanMove(tile))
+        if (CanMove(tile))
+            Pos = newPos;
+        else if (!attacking)
             return false;
-        Pos = newPos;
-        if (--RemainingMoves <= 0)
+
+        if (--RemainingMoves <= 0 || GetTile(Pos).TileType == TileType.City)
             EndTurn();
         return true;
     }
@@ -233,20 +256,19 @@ public class Unit : ISerializable
         Hp -= outcome;
         target.Hp -= totalHp - outcome - 1;
         if (target.Hp <= 0)
-        {
-            target.Kill();
             return true;
-        }
         else
-        {
-            Kill();
             return false;
-        }
     }
 
-    void Kill()
+    protected void Kill()
     {
         owner.RemoveUnit(this);
+    }
+
+    public MapTile GetTile(Vector2Int pos)
+    {
+        return Owner.GlobalMap[pos.x, pos.y];
     }
 }
 
@@ -267,6 +289,10 @@ public class Army : Unit
 [Serializable]
 public class Fighter : Unit
 {
+    const int MaxFuel = 20;
+    const int FuelUsedPerTurn = 5;
+    int fuel;
+
     public Fighter(Vector2Int pos, Player owner) : base(UnitType.Fighter, pos, owner)
     {
         UnitInfo.AttackTargets = new UnitType[] { UnitType.Army, UnitType.Fighter, UnitType.Transport, UnitType.Destroyer, UnitType.Submarine, UnitType.Cruiser, UnitType.Battleship, UnitType.Carrier };
@@ -276,6 +302,18 @@ public class Fighter : Unit
     public Fighter(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
     }
+
+    protected override void EndTurn()
+    {
+        fuel -= FuelUsedPerTurn;
+        if (GetTile(Pos).TileType == TileType.City)
+            fuel = MaxFuel;
+        if (fuel == 0)
+            Kill();
+        else
+            base.EndTurn();
+    }
+
 }
 
 [Serializable]
@@ -298,9 +336,12 @@ public class Ship : Unit
         }
     }
 
-    protected override bool CanAttack(Unit unit)
+    protected override bool CanAttack(MapTile tile)
     {
-        return base.CanAttack(unit) || unit.Type == UnitType.Army && canAttackArmies;
+        return base.CanAttack(tile) ||
+            tile.Unit.Type == UnitType.Army &&
+            canAttackArmies &&
+            tile.Unit.Owner != Owner;
     }
 }
 
