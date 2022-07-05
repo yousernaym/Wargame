@@ -230,6 +230,13 @@ public class Player : PlayerSettings
         return state;
     }
 
+    public void RemoveUnit(Unit unit)
+    {
+        units.Remove(unit);
+        GlobalMap.RemoveUnit(unit);
+        Map.RemoveUnit(unit);
+    }
+
     private bool MoveUnit(Unit currentUnit)
     {
         if (AiLevel == 0)

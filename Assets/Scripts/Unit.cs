@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -127,9 +128,16 @@ public class Unit : ISerializable
         info.AddValue("IsActive", IsActive);
     }
 
-    protected virtual bool CanMove(Vector2Int pos)
+    protected bool CanMove(MapTile tile)
     {
-        return false;
+        return tile.TileType == TileType.City
+            && tile.City.Owner == owner
+            || UnitInfo.MoveTargets.Any(tileType => tileType == tile.TileType);
+    }
+
+    protected virtual bool CanAttack(Unit unit)
+    {
+        return UnitInfo.AttackTargets.Any(type => type == unit.Type);
     }
 
     void StopBlink()
@@ -204,7 +212,13 @@ public class Unit : ISerializable
 
     bool Move(Vector2Int newPos)
     {
-        if (!CanMove(newPos))
+        var tile = owner.GlobalMap[newPos.x, newPos.y];
+        if (tile.Unit != null && CanAttack(tile.Unit))
+        {
+            if (!Attack(tile.Unit))
+                return false;
+        }
+        if (!CanMove(tile))
             return false;
         Pos = newPos;
         if (--RemainingMoves <= 0)
@@ -212,10 +226,28 @@ public class Unit : ISerializable
         return true;
     }
 
-    //public void Destroy()
-    //{
-    //    GameObject.Destroy(gameObject);
-    //}
+    bool Attack(Unit target)
+    {
+        int totalHp = Hp + target.Hp;
+        var outcome = UnityEngine.Random.Range(0, totalHp);
+        Hp -= outcome;
+        target.Hp -= totalHp - outcome - 1;
+        if (target.Hp <= 0)
+        {
+            target.Kill();
+            return true;
+        }
+        else
+        {
+            Kill();
+            return false;
+        }
+    }
+
+    void Kill()
+    {
+        owner.RemoveUnit(this);
+    }
 }
 
 [Serializable]
@@ -223,15 +255,12 @@ public class Army : Unit
 {
     public Army(Vector2Int pos, Player owner) : base(UnitType.Army, pos, owner)
     {
+        UnitInfo.AttackTargets = new UnitType[] { UnitType.Army, UnitType.Fighter, UnitType.Transport, UnitType.Destroyer, UnitType.Cruiser, UnitType.Battleship, UnitType.Carrier };
+        UnitInfo.MoveTargets = new TileType[] { TileType.Land };
     }
 
     public Army(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
-    }
-
-    protected override bool CanMove(Vector2Int pos)
-    {
-        return true; //Todo: check if army can move to this tile
     }
 }
 
@@ -240,6 +269,8 @@ public class Fighter : Unit
 {
     public Fighter(Vector2Int pos, Player owner) : base(UnitType.Fighter, pos, owner)
     {
+        UnitInfo.AttackTargets = new UnitType[] { UnitType.Army, UnitType.Fighter, UnitType.Transport, UnitType.Destroyer, UnitType.Submarine, UnitType.Cruiser, UnitType.Battleship, UnitType.Carrier };
+        UnitInfo.MoveTargets = new TileType[] { TileType.Land, TileType.Water };
     }
 
     public Fighter(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
@@ -254,6 +285,8 @@ public class Ship : Unit
     public Ship(UnitType unitType, Vector2Int pos, Player owner, bool canAttackArmies) : base(unitType, pos, owner)
     {
         this.canAttackArmies = canAttackArmies;
+        UnitInfo.AttackTargets = new UnitType[] { UnitType.Army, UnitType.Fighter, UnitType.Transport, UnitType.Destroyer, UnitType.Submarine, UnitType.Cruiser, UnitType.Battleship, UnitType.Carrier };
+        UnitInfo.MoveTargets = new TileType[] { TileType.Water };
     }
 
     public Ship(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
@@ -264,6 +297,11 @@ public class Ship : Unit
                 canAttackArmies = (bool)entry.Value;
         }
     }
+
+    protected override bool CanAttack(Unit unit)
+    {
+        return base.CanAttack(unit) || unit.Type == UnitType.Army && canAttackArmies;
+    }
 }
 
 [Serializable]
@@ -271,6 +309,7 @@ public class Transport : Ship
 {
     public Transport(Vector2Int pos, Player owner) : base(UnitType.Transport, pos, owner, false)
     {
+
     }
 
     public Transport(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)

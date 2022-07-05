@@ -209,6 +209,12 @@ public class Map : ISerializable
         var diff = pos1 - pos2;
         return Math.Max(diff.x, diff.y);
     }
+
+    public void RemoveUnit(Unit unit)
+    {
+        tiles[unit.Pos.x, unit.Pos.y].Unit = null;
+        Renderer.UpdateTile(unit.Pos.x, unit.Pos.y, this);
+    }
 }
 
 [Serializable]
