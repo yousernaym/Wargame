@@ -79,5 +79,8 @@ crashlytics-build.properties
 /Assets/Textures
 /Assets/UIGradient
 /Assets/WW2 Armed Forces Demo
-
+/Assets/Battleship
+/Assets/TransportShip
+/Assets/Aircraft carrier pack
+/Assets/Submarine*
 *.xcf
