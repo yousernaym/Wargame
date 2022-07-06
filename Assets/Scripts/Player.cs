@@ -25,7 +25,8 @@ public class Player : PlayerSettings
                 return;
             if (value != null)
             {
-                Map.Renderer.MoveCameraToTile(value.Pos);
+                if (AiLevel == 0)
+                    Map.Renderer.MoveCameraToTile(value.Pos);
                 value.IsActive = true;
 
             }
@@ -218,8 +219,7 @@ public class Player : PlayerSettings
                     State = PlayerState.EndTurn;
                     break;
                 }
-                if (MoveUnit(CurrentUnit))
-                    Map.Renderer.MoveCameraToTile(CurrentUnit.Pos);
+                MoveUnit(CurrentUnit);
                 if (CurrentUnit.CurrentTurn > CurrentTurn)
                     CurrentUnit = GetNextUnit();
                 break;
@@ -341,7 +341,7 @@ public class Player : PlayerSettings
 
     void SelectProd_AI(City city)
     {
-        city.Production = UnitType.Battleship;
+        city.Production = UnitType.Army;
     }
 
     public void ShowProdDialog(City city)

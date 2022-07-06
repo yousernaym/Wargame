@@ -47,6 +47,8 @@ public class Unit : ISerializable
                 foreach (var passenger in passengers)
                     passenger.pos = value;
                 owner.Map.Explore(Pos);
+                if (owner.AiLevel == 0)
+                    owner.Map.Renderer.MoveCameraToTile(Pos);
             }
             else
                 pos = value;

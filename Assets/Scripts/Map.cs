@@ -113,9 +113,8 @@ public class Map : ISerializable
                     tiles[x, y] = ReferenceMap[x, y];
                 else
                 {
-                    //Don't update tile of another friendly unit/city (it is already updated or will be)
-                    if (referenceTile.Unit != null && referenceTile.Unit.Owner != Owner
-                        || referenceTile.City != null && referenceTile.City.Owner != Owner)
+                    //Don't update tile of another friendly unit (it is already updated or will be)
+                    if (referenceTile.Unit != null && referenceTile.Unit.Owner == Owner)
                         continue;
                     // Enemy units/cities can move/change without our knowledge so we should make a copy that will not change
                     tiles[x, y] = ReferenceMap[x, y].Clone();

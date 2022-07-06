@@ -114,11 +114,19 @@ public class MapRenderer : MonoBehaviour
         Camera.transform.SetPositionAndRotation(new Vector3(width / 2, height / 2, z), Quaternion.identity);
     }
 
+    public float TileWidthInScreenSpace
+    {
+        get
+        {
+            var tileStartScreenSpace = Camera.WorldToScreenPoint(new Vector3(0, 0, 0)).x;
+            var tileEndScreenSpace = Camera.WorldToScreenPoint(new Vector3(1, 0, 0)).x;
+            return tileEndScreenSpace - tileStartScreenSpace;
+        }
+    }
+    
     public void Pan(Vector2 screenSpaceOffset)
     {
-        var tileStartScreenSpace = Camera.WorldToScreenPoint(new Vector3(0, 0, 0)).x;
-        var tileEndScreenSpace = Camera.WorldToScreenPoint(new Vector3(1, 0, 0)).x;
-        var tileSizeScreenSpace = tileEndScreenSpace - tileStartScreenSpace;
+        float tileSizeScreenSpace = TileWidthInScreenSpace;
         CamPos -= new Vector3(screenSpaceOffset.x, screenSpaceOffset.y, 0) / tileSizeScreenSpace;
     }
 
@@ -223,8 +231,9 @@ public class MapRenderer : MonoBehaviour
     public bool IsTileInView(Vector2Int pos)
     {
         var screenPos = TileToScreenPos(pos);
-        return screenPos.x < Screen.width - 0.5f && screenPos.x > 0.5f
-            && screenPos.y < Screen.height - 0.5f && screenPos.y > 0.5f;
+        float margin = 2.5f * TileWidthInScreenSpace;
+        return screenPos.x < Screen.width - margin && screenPos.x > margin
+            && screenPos.y < Screen.height - margin && screenPos.y > margin;
     }
 
     public void SetZoomPreset(int preset)
