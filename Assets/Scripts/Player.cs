@@ -34,7 +34,7 @@ public class Player : PlayerSettings
             currentUnit = value;
         }
     }
-    public Map GlobalMap { get; private set; }
+    public Map GlobalMap => Map.ReferenceMap;
     public Map Map { get; private set; }
     public int CurrentTurn { get; private set; }
     int currentCityIndex;
@@ -72,26 +72,25 @@ public class Player : PlayerSettings
     {
         units.Add(unit);
         GlobalMap.SetUnit(unit);
-        Map.Explore(unit.Pos, GlobalMap);
+        Map.Explore(unit.Pos);
     }
 
     private void SyncWithGlobalMap()
     {
         foreach (var unit in units)
-            Map.Explore(unit.Pos, GlobalMap);
+            Map.Explore(unit.Pos);
         foreach (var city in cities)
-            Map.Explore(city.Pos, GlobalMap);
+            Map.Explore(city.Pos);
     }
 
     public Player(PlayerSettings settings, Map globalMap, ProdDialog prodDialog) : base(settings)
     {
-        this.GlobalMap = globalMap;
         this.ProdDialog = prodDialog;
         var globalMapPrefab = (GameObject)Resources.Load("Tiling/GlobalMap");
         var tilemapsParent = GameObject.Instantiate(globalMapPrefab, globalMap.Renderer.gameObject.transform.parent);
         tilemapsParent.name = Name;
         var mapRenderer = tilemapsParent.GetComponent<MapRenderer>();
-        Map = new Map(mapRenderer, this);
+        Map = new Map(mapRenderer, this, globalMap);
         Map.InitToUnexplored();
     }
 
@@ -185,7 +184,7 @@ public class Player : PlayerSettings
         city.Owner = this;
         cities.Add(city);
         GlobalMap.SetCity(city);
-        Map.Explore(city.Pos, GlobalMap);
+        Map.Explore(city.Pos);
     }
 
     void RemoveCity(City city)
@@ -207,7 +206,7 @@ public class Player : PlayerSettings
             case PlayerState.StartTurn:
                 if (CurrentCity.IsProdDone())
                 {
-                    units.Add(CurrentCity.CreateUnit());
+                    CurrentCity.CreateUnit();
                     SelectProd(CurrentCity, true);
                 }
                 if (++currentCityIndex >= cities.Count)
@@ -235,6 +234,7 @@ public class Player : PlayerSettings
         units.Remove(unit);
         GlobalMap.RemoveUnit(unit);
         Map.RemoveUnit(unit);
+        //UnitStats[unit.Type].Lost++;
     }
 
     private bool MoveUnit(Unit currentUnit)
@@ -341,7 +341,7 @@ public class Player : PlayerSettings
 
     void SelectProd_AI(City city)
     {
-        city.Production = UnitType.Army;
+        city.Production = UnitType.Battleship;
     }
 
     public void ShowProdDialog(City city)

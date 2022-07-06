@@ -96,7 +96,7 @@ public class Gameplay : MonoBehaviour
         else
         {
             serializableData = new SerializableData();
-            GlobalMap = new Map(globalMapRenderer, null);
+            GlobalMap = new Map(globalMapRenderer, null, null);
             foreach (var playerSetting in NewGameSettings.Instance.PlayerSettings)
                 Players.Add(new Player(playerSetting, GlobalMap, prodDialog));
         }

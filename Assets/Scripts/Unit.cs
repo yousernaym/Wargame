@@ -13,10 +13,9 @@ public enum UnitAction { Left, Right, Up, Down, LeftUp, RightUp, LeftDown, Right
 public class Unit : ISerializable
 {
     const float BlinkIntervalSeconds = 0.5f;
-    static Dictionary<UnitType, GameObject> UnitPrefabs;
     DateTime lastBlinkTime;
-    
-    List<Unit> passengers;
+    protected UnitType? canCarryType = null;
+    protected List<Unit> passengers = new List<Unit>();
     Unit container;
     
     Vector2Int? pos;
@@ -28,14 +27,43 @@ public class Unit : ISerializable
             if (owner != null)
             {
                 if (pos != null)
-                    GetTile(Pos).Unit = null;
+                {
+                    var oldTile = GetTile(Pos);
+                    if (IsCarriedBy(oldTile.Unit))
+                        oldTile.Unit.RemovePassenger(this);
+                    else if (IsInCity(oldTile.City))
+                        oldTile.City.Units.Remove(this);
+                    else
+                        oldTile.Unit = null;
+                }
                 pos = value;
-                Owner.AddUnit(this);
+                var tile = GetTile(Pos);
+                if (CanBeCarriedBy(tile.Unit))
+                    tile.Unit.AddPassenger(this);
+                else if (tile.City == null)
+                    tile.Unit = this;
+                else
+                    tile.City.Units.Add(this);
+                foreach (var passenger in passengers)
+                    passenger.pos = value;
+                owner.Map.Explore(Pos);
             }
             else
                 pos = value;
         }
     }
+
+    public bool IsInCity(City city)
+    {
+        return city != null && city.Units.Contains(this);
+    }
+
+    void AddPassenger(Unit unit)
+    {
+        passengers.Add(unit);
+        unit.container = this;
+    }
+
     public UnitInfo UnitInfo { get; private set; }
     int hp;
     public int Hp
@@ -83,27 +111,21 @@ public class Unit : ISerializable
         {
             if (IsActive == value)
                 return;
+            isActive = value;
             if (value)
-                StartBlink(Owner.Map[Pos.x, Pos.y].City == null);
+                StartBlink(Owner.Map[Pos.x, Pos.y].City != null || container != null);
+                //StartBlink(Owner.Map[Pos.x, Pos.y].City == null);
             else
                 StopBlink();
-            isActive = value;
         }
     }
 
     public bool IsWaiting { get; set; }
+    public Unit ActivePassenger => passengers.FirstOrDefault(passenger => passenger.isActive);
 
     public Unit(UnitType unitType, Vector2Int pos, Player owner)
     {
-        if (UnitPrefabs == null)
-        {
-            //UnitPrefabs = new Dictionary<UnitType, GameObject>();
-            //foreach (UnitType type in Enum.GetValues(typeof(UnitType)))
-                //UnitPrefabs[type] = Resources.Load<GameObject>("Units/" + Enum.GetName(typeof(UnitType), type));
-        }
         Type = unitType;
-        
-        //gameObject = GameObject.Instantiate(UnitPrefabs[unitType], owner.GameObject.transform);
         Pos = pos;
         Owner = owner;
         Owner.AddUnit(this);
@@ -128,6 +150,8 @@ public class Unit : ISerializable
                 foreach (var passenger in passengers)
                     passenger.container = this;
             }
+            else if (entry.Name == "CanCarryType")
+                canCarryType = (UnitType)entry.Value;
         }
     }
 
@@ -139,12 +163,11 @@ public class Unit : ISerializable
         info.AddValue("IsActive", IsActive);
     }
 
-    protected bool CanMove(MapTile tile)
+    bool CanMove(MapTile tile)
     {
-        return tile.TileType == TileType.City
-            && tile.City.Owner == owner
+        return IsFriend(tile.City)
             || UnitInfo.MoveTargets.Any(tileType => tileType == tile.TileType)
-            && tile.Unit.owner != owner;
+            || CanBeCarriedBy(tile.Unit);
     }
 
     protected virtual bool CanAttack(MapTile tile)
@@ -160,14 +183,12 @@ public class Unit : ISerializable
 
     void StopBlink()
     {
-        owner.Map[Pos.x, Pos.y].Unit = this;
-        owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
+        owner.Map.Renderer.SetUnitVisibility(Pos.x, Pos.y, owner.Map, true);
     }
 
     public void StartBlink(bool initialState)
     {
-        owner.Map[Pos.x, Pos.y].Unit = null;
-        owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
+        owner.Map.Renderer.SetUnitVisibility(Pos.x, Pos.y, owner.Map, initialState);
         lastBlinkTime = DateTime.Now;
     }
 
@@ -178,8 +199,7 @@ public class Unit : ISerializable
             var timeElapsed = DateTime.Now - lastBlinkTime;
             if (timeElapsed.TotalSeconds > BlinkIntervalSeconds)
             {
-                owner.Map[Pos.x, Pos.y].Unit = owner.Map[Pos.x, Pos.y].Unit == null ? this : null;
-                owner.Map.Renderer.UpdateTile(Pos.x, Pos.y, owner.Map);
+                owner.Map.Renderer.ToggleUnitVisibility(Pos.x, Pos.y, owner.Map);
                 lastBlinkTime = DateTime.Now;
             }
         }
@@ -244,7 +264,9 @@ public class Unit : ISerializable
         else if (!attacking)
             return false;
 
-        if (--RemainingMoves <= 0 || GetTile(Pos).TileType == TileType.City)
+        if (--RemainingMoves <= 0 
+            || tile.TileType == TileType.City
+            || container != null)
             EndTurn();
         return true;
     }
@@ -264,11 +286,38 @@ public class Unit : ISerializable
     protected void Kill()
     {
         owner.RemoveUnit(this);
+        foreach (var passenger in passengers)
+            owner.RemoveUnit(passenger);
     }
 
     public MapTile GetTile(Vector2Int pos)
     {
         return Owner.GlobalMap[pos.x, pos.y];
+    }
+
+    public bool CanBeCarriedBy(Unit unit)
+    {
+        return IsFriend(unit) && unit.canCarryType == Type;
+    }
+
+    public bool IsCarriedBy(Unit unit)
+    {
+        return container != null && container == unit;
+    }
+
+    public void RemovePassenger(Unit unit)
+    {
+        passengers.Remove(unit);
+    }
+
+    public bool IsFriend(Unit unit)
+    {
+        return unit != null && unit.owner == owner;
+    }
+
+    public bool IsFriend(City city)
+    {
+        return city != null && city.Owner == owner;
     }
 }
 
@@ -348,13 +397,19 @@ public class Ship : Unit
 [Serializable]
 public class Transport : Ship
 {
+    const int MaxPassengers = 6;
     public Transport(Vector2Int pos, Player owner) : base(UnitType.Transport, pos, owner, false)
     {
-
+        canCarryType = UnitType.Army;
     }
 
     public Transport(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
+    }
+
+    bool IsFull()
+    {
+        return passengers.Count > MaxPassengers;
     }
 }
 
@@ -409,12 +464,20 @@ public class Battleship : Ship
 [Serializable]
 public class Carrier : Ship
 {
+    const int MaxPassengers = 8;
     public Carrier(Vector2Int pos, Player owner) : base(UnitType.Carrier, pos, owner, false)
     {
+        canCarryType = UnitType.Fighter;
     }
 
     public Carrier(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
+        
+    }
+
+    bool IsFull()
+    {
+        return passengers.Count > MaxPassengers;
     }
 }
 

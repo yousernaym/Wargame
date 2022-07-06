@@ -11,6 +11,7 @@ public enum TileType { Land, Water, City, Unexplored }
 [Serializable]
 public class Map : ISerializable
 {
+    public Map ReferenceMap { get; private set; }
     public Player Owner { get; set; }
     public MapRenderer Renderer { get; set; }
     public int Width { get; set; }
@@ -31,8 +32,9 @@ public class Map : ISerializable
         }
     }
 
-    public Map(MapRenderer renderer, Player owner)
+    public Map(MapRenderer renderer, Player owner, Map referenceMap)
     {
+        this.ReferenceMap = referenceMap;
         Renderer = renderer;
         Width = NewGameSettings.Instance.NewMapSettings.Width.value;
         Height = NewGameSettings.Instance.NewMapSettings.Height.value;
@@ -96,7 +98,7 @@ public class Map : ISerializable
         Renderer.UpdateTile(unit.Pos.x, unit.Pos.y, this);
     }
 
-    public void Explore(Vector2Int pos, Map globalMap)
+    public void Explore(Vector2Int pos)
     {
         for (int y = pos.y - 1; y <= pos.y + 1; y++)
         {
@@ -105,18 +107,18 @@ public class Map : ISerializable
                 if (x < 0 || x >= Width || y < 0 || y >= Height)
                     continue;
 
-                var globalTile = globalMap[x, y];
+                var referenceTile = ReferenceMap[x, y];
 
                 if (x == pos.x && y == pos.y)
-                    tiles[x, y] = globalMap[x, y];
+                    tiles[x, y] = ReferenceMap[x, y];
                 else
                 {
                     //Don't update tile of another friendly unit/city (it is already updated or will be)
-                    if (globalTile.Unit != null && globalTile.Unit.Owner != Owner
-                        || globalTile.City != null && globalTile.City.Owner != Owner)
+                    if (referenceTile.Unit != null && referenceTile.Unit.Owner != Owner
+                        || referenceTile.City != null && referenceTile.City.Owner != Owner)
                         continue;
                     // Enemy units/cities can move/change without our knowledge so we should make a copy that will not change
-                    tiles[x, y] = globalMap[x, y].Clone();
+                    tiles[x, y] = ReferenceMap[x, y].Clone();
                 }
                 Renderer.UpdateTile(x, y, this);
             }

@@ -24,6 +24,9 @@ public class City : ISerializable
         }
     }
 
+    public List<Unit> Units { get; private set; } = new List<Unit>();
+    public Unit ActiveUnit => Units.Find(unit => unit.IsActive);
+
     public City(Player owner, int x, int y)
     {
         this.Owner = owner;
@@ -59,25 +62,36 @@ public class City : ISerializable
 
     public Unit CreateUnit()
     {
+        Unit newUnit = null;
         switch (Production)
         {
             case UnitType.Army:
-                return new Army(Pos, Owner);
+                newUnit = new Army(Pos, Owner);
+                break;
             case UnitType.Fighter:
-                return new Fighter(Pos, Owner);
+                newUnit = new Fighter(Pos, Owner);
+                break;
             case UnitType.Transport:
-                return new Transport(Pos, Owner);
+                newUnit = new Transport(Pos, Owner);
+                break;
             case UnitType.Destroyer:
-                return new Destroyer(Pos, Owner);
+                newUnit = new Destroyer(Pos, Owner);
+                break;
             case UnitType.Submarine:
-                return new Submarine(Pos, Owner);
+                newUnit = new Submarine(Pos, Owner);
+                break;
             case UnitType.Cruiser:
-                return new Cruiser(Pos, Owner);
+                newUnit = new Cruiser(Pos, Owner);
+                break;
             case UnitType.Battleship:
-                return new Battleship(Pos, Owner);
+                newUnit = new Battleship(Pos, Owner);
+                break;
             case UnitType.Carrier:
-                return new Carrier(Pos, Owner);
+                newUnit = new Carrier(Pos, Owner);
+                break;
             default: throw new NotImplementedException();
         }
+        Units.Add(newUnit);
+        return newUnit;
     }
 }

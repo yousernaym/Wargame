@@ -149,10 +149,34 @@ public class MapRenderer : MonoBehaviour
         }
     }
 
+    internal void ToggleUnitVisibility(int x, int y, Map map)
+    {
+        var currentTile = unitTilemap.GetTile(new Vector3Int(x, y, 0));
+        SetUnitVisibility(x, y, map, currentTile == null);
+    }
+
+    public void SetUnitVisibility(int x, int y, Map map, bool visible)
+    {
+        Tile tile = null;
+        if (visible)
+            tile = GetUnitTileToRender(map[x, y]);
+        unitTilemap.SetTile(new Vector3Int(x, y, 0), tile);
+    }
+
     public void UpdateTile(int x, int y, Map map)
     {
-        Tile baseTile = null;
         MapTile mapTile = map[x, y];
+        var baseTile = GetBaseTile(mapTile);
+        var unitTile = GetUnitTileToRender(mapTile);
+
+        unitTilemap.SetTile(new Vector3Int(x, y, 0), unitTile);
+        baseTilemap.SetTile(new Vector3Int(x, y, 0), baseTile);
+
+    }
+
+    Tile GetBaseTile(MapTile mapTile)
+    {
+        Tile baseTile = null;
         if (mapTile.TileType == TileType.Land)
             baseTile = grassTile;
         else if (mapTile.TileType == TileType.Water)
@@ -164,14 +188,24 @@ public class MapRenderer : MonoBehaviour
             var owner = mapTile.City.Owner;
             baseTile = owner == null ? neutralCityTile : playerCityTiles[owner.PlayerIndex];
         }
+        return baseTile;
+    }
 
-        Tile unitTile = null;
-        if (mapTile.Unit != null)
-            unitTile = playerUnitTiles[mapTile.Unit.Type][mapTile.Unit.Owner.PlayerIndex];
+    Tile GetUnitTileToRender(MapTile mapTile)
+    {
+        var unit = mapTile.Unit;
 
-        unitTilemap.SetTile(new Vector3Int(x, y, 0), unitTile);
-        baseTilemap.SetTile(new Vector3Int(x, y, 0), baseTile);
+        if (mapTile.City != null)
+            unit = mapTile.City.ActiveUnit;
+        else if (unit != null)
+        {
+            if (unit.ActivePassenger != null)
+                unit = unit.ActivePassenger;
+        }
 
+        if (unit == null)
+            return null;
+        return playerUnitTiles[unit.Type][unit.Owner.PlayerIndex]; ;
     }
 
     public void MoveCameraToTile(Vector2Int pos)
