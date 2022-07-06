@@ -13,6 +13,7 @@ public enum UnitAction { Left, Right, Up, Down, LeftUp, RightUp, LeftDown, Right
 public class Unit : ISerializable
 {
     const float BlinkIntervalSeconds = 0.5f;
+    protected int maxPassengers;
     DateTime lastBlinkTime;
     protected UnitType? canCarryType = null;
     protected List<Unit> passengers = new List<Unit>();
@@ -24,6 +25,8 @@ public class Unit : ISerializable
         get => (Vector2Int)pos;
         private set
         {
+            if (pos == value)
+                return;
             if (owner != null)
             {
                 if (pos != null)
@@ -32,9 +35,13 @@ public class Unit : ISerializable
                     if (IsCarriedBy(oldTile.Unit))
                         oldTile.Unit.RemovePassenger(this);
                     else if (IsInCity(oldTile.City))
+                    {
                         oldTile.City.Units.Remove(this);
+                        AddPassengersFromCity(oldTile.City);
+                    }
                     else
                         oldTile.Unit = null;
+                    StopBlink();
                 }
                 pos = value;
                 var tile = GetTile(Pos);
@@ -43,7 +50,14 @@ public class Unit : ISerializable
                 else if (tile.City == null)
                     tile.Unit = this;
                 else
+                {
                     tile.City.Units.Add(this);
+                    for (int i = 0; i < passengers.Count; i++)
+                    {
+                        RemovePassenger(passengers[i]);
+                        tile.City.Units.Add(passengers[i]);
+                    }
+                }
                 foreach (var passenger in passengers)
                     passenger.pos = value;
                 owner.Map.Explore(Pos);
@@ -52,6 +66,17 @@ public class Unit : ISerializable
             }
             else
                 pos = value;
+        }
+    }
+
+    private void AddPassengersFromCity(City city)
+    {
+        foreach (var unit in city.Units)
+        {
+            if (IsFull)
+                return;
+            if (canCarryType == unit.type)
+                AddPassenger(unit);
         }
     }
 
@@ -124,6 +149,7 @@ public class Unit : ISerializable
 
     public bool IsWaiting { get; set; }
     public Unit ActivePassenger => passengers.FirstOrDefault(passenger => passenger.isActive);
+    bool IsFull => passengers.Count > maxPassengers;
 
     public Unit(UnitType unitType, Vector2Int pos, Player owner)
     {
@@ -154,6 +180,8 @@ public class Unit : ISerializable
             }
             else if (entry.Name == "CanCarryType")
                 canCarryType = (UnitType)entry.Value;
+            else if (entry.Name == "MaxPassengers")
+                maxPassengers = (int)entry.Value;
         }
     }
 
@@ -399,19 +427,14 @@ public class Ship : Unit
 [Serializable]
 public class Transport : Ship
 {
-    const int MaxPassengers = 6;
     public Transport(Vector2Int pos, Player owner) : base(UnitType.Transport, pos, owner, false)
     {
         canCarryType = UnitType.Army;
+        maxPassengers = 6;
     }
 
     public Transport(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
-    }
-
-    bool IsFull()
-    {
-        return passengers.Count > MaxPassengers;
     }
 }
 
@@ -466,7 +489,6 @@ public class Battleship : Ship
 [Serializable]
 public class Carrier : Ship
 {
-    const int MaxPassengers = 8;
     public Carrier(Vector2Int pos, Player owner) : base(UnitType.Carrier, pos, owner, false)
     {
         canCarryType = UnitType.Fighter;
@@ -474,12 +496,7 @@ public class Carrier : Ship
 
     public Carrier(SerializationInfo info, StreamingContext ctxt) : base(info, ctxt)
     {
-        
-    }
-
-    bool IsFull()
-    {
-        return passengers.Count > MaxPassengers;
+        maxPassengers = 8;
     }
 }
 
